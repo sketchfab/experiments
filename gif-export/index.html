@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab Share</title>
+    <script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+    <script type="text/javascript" src="gif.js"></script>
+    <script type="text/javascript" src="BezierEasing.js"></script>
+    <script type="text/javascript" src="skfb2gif-animations.js"></script>
+    <script type="text/javascript" src="skfb2gif.js"></script>
+    <style type="text/css">
+    body {
+        font-family: sans-serif;
+    }
+    </style>
+</head>
+
+<body>
+<form action="" method="post" id="shareform">
+    <label for="urlid">Enter model URL ID:</label>
+    <input type="text" size="40" name="urlid" id="urlid" placeholder="e.g: 387889bbe73648c38589a3fffd1f876c">
+    <button id="makegif" type="submit">Share</button>
+</form>
+
+<pre>
+Try one of these:
+f1bcd7cdd23143f88f513209b10df815
+387889bbe73648c38589a3fffd1f876c
+b93539e49224408a934d148edb7d6090
+7e841ede7f3f4155b05f864fbdbe370a
+</pre>
+
+<div id="output"></div>
+
+<script type="text/javascript">
+
+var upload = true;
+var bt = document.querySelector('#makegif');
+var title = '';
+var description = '';
+
+shareform.addEventListener('submit', function( e ){
+
+    e.preventDefault();
+
+    var originalText = bt.innerText;
+    bt.innerText = 'Please wait...';
+    bt.disabled = 'disabled';
+
+    var urlid = document.querySelector('#urlid').value.replace(/^\s+|\s+$/g, '');
+    console.log(urlid);
+
+    if (urlid === '') {
+        alert('Please enter an URLID');
+        bt.innerText = originalText;
+        bt.removeAttribute('disabled');
+        return;
+    }
+
+    // Get model info
+    var req = new XMLHttpRequest();
+    req.open('GET', 'https://sketchfab.com/v2/models/' + urlid, false);
+    req.send(null);
+    if(req.status == 200) {
+        info = JSON.parse(req.responseText);
+        title = info.name + ' by ' + info.user.displayName;
+        description = 'https://sketchfab.com/models/' + urlid;
+    }
+
+    // Try to get annotations
+    var req = new XMLHttpRequest();
+    req.open('GET', 'https://sketchfab.com/i/models/' + urlid + '/hotspots', false);
+    req.send(null);
+    if(req.status == 200) {
+        annotations = JSON.parse(req.responseText).results;
+        window.annotations = annotations;
+    }
+
+    // Capture
+    var skfbgif = new SketchfabGif(urlid, {
+        width: 400,
+        height: 250,
+        duration: 5
+    });
+
+    skfbgif.on('progress', function( res ){
+        // console.info( res );
+        bt.innerText = 'Please wait... ' + res.progress + '%';
+
+        if ( res.progress === 100 ) {
+
+            bt.innerText = 'Almost there...';
+
+            var url = URL.createObjectURL(res.data);
+            console.log(url);
+
+            if (upload) {
+                // Upload to imgur
+                var fd = new FormData();
+                fd.append("image", res.data, '3d-sketchfab-model.gif');
+                fd.append("title", title);
+                fd.append("description", description);
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://api.imgur.com/3/image");
+                xhr.setRequestHeader('Authorization', 'Client-ID 0c3e658c3d61441');
+                xhr.onload = function() {
+                    var response = JSON.parse(xhr.responseText);
+                    console.log(response);
+                    window.open('http://imgur.com/' + response.data.id);
+                    bt.innerText = originalText;
+                    bt.removeAttribute('disabled');
+                };
+                xhr.send(fd);
+            } else {
+                var div = document.querySelector('#output');
+                div.innerHTML = ('<img src="' + url + '">');
+                bt.innerText = originalText;
+                bt.removeAttribute('disabled');
+            }
+
+        }
+
+    });
+    skfbgif.start();
+
+}, false);
+</script>
+</body>
+</html>
