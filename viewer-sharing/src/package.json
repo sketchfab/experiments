@@ -1,0 +1,25 @@
+{
+  "name": "skfb-api",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "backbone": "^1.1.2",
+    "browserify": "^6.2.0",
+    "browserify-shim": "^3.8.0",
+    "gulp": "^3.8.9",
+    "gulp-autoprefixer": "^1.0.1",
+    "gulp-minify-css": "^0.3.11",
+    "jquery": "^2.1.1",
+    "moment": "^2.8.3",
+    "normalize.css": "^3.0.2",
+    "stringify": "^3.0.0",
+    "underscore": "^1.7.0",
+    "vinyl-source-stream": "^1.0.0"
+  }
+}

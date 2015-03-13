@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab Together</title>
+    <link rel="stylesheet" type="text/css" href="style/main.css">
+</head>
+<body>
+
+<div class="intro">
+    <form>
+        <input type="text" name="url" class="text" placeholder="Enter a Sketchfab URL">
+        <button type="submit">Collaborate</button>
+    </form>
+</div>
+
+<div class="collaboration">
+    <form class="control">
+        <label>
+            <input type="checkbox" name="master"> Master
+        </label>
+    </form>
+    <iframe id="api-frame" width="640" height="480"></iframe>
+</div>
+
+<script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+<script type="text/javascript">
+TogetherJSConfig_siteName = "Sketchfab Together"
+TogetherJSConfig_disableWebRTC = true;
+TogetherJSConfig_includeHashInUrl = true;
+TogetherJSConfig_ignoreForms = false;
+</script>
+<script src="https://togetherjs.com/togetherjs-min.js"></script>
+<script type="text/javascript" src="js/app.js"></script>
+</body>
+</html>
