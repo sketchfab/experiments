@@ -41,6 +41,10 @@ var AppView = Backbone.View.extend({
                 embedParams[embedParamNames[i]] = getParameterByName(embedParamNames[i]);
             }
         }
+
+        // Force continuous rendering
+        embedParams.continuousRender = 1;
+
         this._embedParams = embedParams;
         console.log(this.embedParams);
 

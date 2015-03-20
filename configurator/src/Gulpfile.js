@@ -1,6 +1,8 @@
 var browserify = require('browserify');
 var stringify = require('stringify');
 var source = require('vinyl-source-stream');
+var template = require('gulp-template');
+var rename = require('gulp-rename');
 var pkg = require('./package.json');
 
 var gulp = require('gulp');
@@ -14,7 +16,8 @@ gulp.task('browserify', function() {
         .transform(stringify(['.tpl']))
         .bundle()
         .pipe(source('js/app.js' ))
-        .pipe(gulp.dest('./dist/'));
+        .pipe(rename("app." + pkg.version + ".js"))
+        .pipe(gulp.dest('./dist/js/'));
 });
 
 gulp.task('style', function() {
@@ -23,12 +26,11 @@ gulp.task('style', function() {
             keepBreaks: true
         }))
         .pipe(prefix({ cascade: true }))
+        .pipe(rename("app." + pkg.version + ".css"))
         .pipe(gulp.dest('./dist/style/'))
 });
 
 gulp.task('copy', function(){
-    gulp.src('src/index.html')
-        .pipe(gulp.dest('./dist/'));
     gulp.src('src/style/app.css')
         .pipe(gulp.dest('./dist/style/'));
     gulp.src('src/js/vendors/**')
@@ -37,11 +39,19 @@ gulp.task('copy', function(){
         .pipe(gulp.dest('./dist/assets'));
 });
 
+gulp.task('html', function(){
+    return gulp.src('src/index.html')
+        .pipe(template({
+            version: pkg.version
+        }))
+        .pipe(gulp.dest('dist'));
+});
+
 gulp.task('watch', function(){
     gulp.watch('src/**', ['build']);
     gulp.watch('css/**', ['minify-css']);
 });
 
-gulp.task('build', [ 'copy', 'style', 'browserify']);
+gulp.task('build', [ 'copy', 'html', 'style', 'browserify']);
 
 gulp.task('default', ['build']);
