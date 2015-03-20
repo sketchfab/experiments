@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Sketchfab Viewer Configurator</title>
-    <link rel="stylesheet" type="text/css" href="style/app.1.0.0.css">
+    <link rel="stylesheet" type="text/css" href="style/app.1.0.1.css">
     <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -13,9 +13,6 @@
     ga('create', 'UA-22680456-16', 'auto');
     ga('send', 'pageview');
     </script>
-    <script type="text/javascript">var switchTo5x=true;</script>
-<script type="text/javascript" src="https://ws.sharethis.com/button/buttons.js"></script>
-<script type="text/javascript">stLight.options({publisher: "f308bf71-d747-41e7-a550-57876ddb9f8c", doNotHash: true, doNotCopy: true, hashAddressBar: false});</script>
 </head>
 
 <body>
@@ -23,10 +20,12 @@
     This experiment was made with the Sketchfab Viewer API.
     <a href="https://github.com/sketchfab/experiments/tree/master/configurator/src">Source on Github</a>
 
-    <div style="float: right">
-        <span class='st_facebook_hcount' displayText='Facebook'></span>
-        <span class='st_twitter_hcount' displayText='Tweet'></span>
-        <span class='st_email_hcount' displayText='Email'></span>
+    <div class="share-button">
+        <!-- Facebook -->
+        <div class="fb-share-button" data-href="https://labs.sketchfab.com/experiments/configurator/" data-layout="button"></div>
+        <!-- Twitter -->
+        <a href="https://twitter.com/share" class="twitter-share-button" data-via="Sketchfab" data-count="none">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
     </div>
 </div>
 
@@ -36,6 +35,16 @@
 <div class="select"></div>
 
 <script type="text/javascript" src="js/vendors/sketchfab-viewer-1.0.0.js"></script>
-<script type="text/javascript" src="js/app.1.0.0.js"></script>
+<script type="text/javascript" src="js/app.1.0.1.js"></script>
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
 </body>
 </html>
