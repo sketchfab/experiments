@@ -123,7 +123,7 @@ var AppView = Backbone.View.extend({
                 console.log(node.name);
                 canBeHidden = node.name
                                 && node.name.indexOf(config.OPTION_PREFIX) !== -1
-                                && node.type === 'Geometry';
+                                && (node.type === 'Geometry' || node.type === 'Group');
                 if (canBeHidden) {
                     this._options.add(new OptionModel({
                         id: node.instanceID,
