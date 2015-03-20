@@ -10,6 +10,14 @@
 <div class="about">
     This experiment was made with the Sketchfab Viewer API.
     <a href="https://github.com/sketchfab/experiments/tree/master/configurator/src">Source on Github</a>
+
+    <div class="share-button">
+        <!-- Facebook -->
+        <div class="fb-share-button" data-href="https://labs.sketchfab.com/experiments/configurator/" data-layout="button"></div>
+        <!-- Twitter -->
+        <a href="https://twitter.com/share" class="twitter-share-button" data-via="Sketchfab" data-count="none">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+    </div>
 </div>
 
 <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
@@ -19,5 +27,15 @@
 
 <script type="text/javascript" src="js/vendors/sketchfab-viewer-1.0.0.js"></script>
 <script type="text/javascript" src="js/app.<%= version %>.js"></script>
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
 </body>
 </html>
