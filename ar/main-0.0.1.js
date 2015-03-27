@@ -22,6 +22,9 @@ var displayModel = function() {
 var getConstraints = function( callback ) {
     var videoSource = null;
 
+    // MediaStreamTrack is not defined, let the browser decide
+    if ( !MediaStreamTrack.getSources ) return callback({});
+
     MediaStreamTrack.getSources(function(sourceInfos) {
 
         for (var i = 0; i !== sourceInfos.length; ++i) {
@@ -41,20 +44,16 @@ var getConstraints = function( callback ) {
     });
 };
 
+navigator.getUserMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
+
 
 button.addEventListener('click', function() {
     if (navigator.getUserMedia) {
-        navigator.getUserMedia('video', function(stream) {
-
-            video.src = stream;
-            video.controls = false;
-            localMediaStream = stream;
-
-            displayModel();
-        }, errorCallback);
-    } else if (navigator.webkitGetUserMedia) {
         getConstraints(function( constraints ) {
-            navigator.webkitGetUserMedia(constraints, function(stream) {
+            navigator.getUserMedia(constraints, function(stream) {
                 video.src = window.URL.createObjectURL(stream);
                 video.controls = false;
                 localMediaStream = stream;
