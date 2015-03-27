@@ -13,7 +13,7 @@ var errorCallback = function(e) {
 
 var displayModel = function() {
     var modelId = modelInput.value;
-    viewer.src = 'https://sketchfab.com/models/' + modelId + '/embed?autostart=1&transparent=1&ui_controls=0&ui_controls=0&watermak=0&ui_infos=0%overridePixelRatio=1.5';
+    viewer.src = 'https://sketchfab.com/models/' + modelId + '/embed?autostart=1&transparent=1&ui_controls=0&ui_controls=0&watermak=0&ui_infos=0&overridePixelRatio=1.5';
     viewer.style.display = 'block';
     controls.style.display = 'none';
 
