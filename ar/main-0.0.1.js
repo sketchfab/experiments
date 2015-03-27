@@ -19,7 +19,7 @@ var displayModel = function() {
 
 };
 
-var getCamera = function() {
+var getConstraints = function( callback ) {
     var videoSource = null;
 
     MediaStreamTrack.getSources(function(sourceInfos) {
@@ -27,19 +27,18 @@ var getCamera = function() {
         for (var i = 0; i !== sourceInfos.length; ++i) {
             var sourceInfo = sourceInfos[i];
             if (sourceInfo.kind === 'video' && sourceInfo.facing === "environment") {
-                console.log(sourceInfo.id, sourceInfo.label || 'microphone');
                 videoSource = sourceInfo.id;
             }
         }
-    });
 
-    return {
+        callback( {
         video: {
             optional: [{
                 sourceId: videoSource
             }]
         }
-    };
+        });
+    });
 };
 
 
@@ -54,14 +53,14 @@ button.addEventListener('click', function() {
             displayModel();
         }, errorCallback);
     } else if (navigator.webkitGetUserMedia) {
-        var constraints = getCamera();
-        console.log( constraints );
-        navigator.webkitGetUserMedia(constraints, function(stream) {
-            video.src = window.URL.createObjectURL(stream);
-            video.controls = false;
-            localMediaStream = stream;
-            displayModel();
-        }, errorCallback);
+        getConstraints(function( constraints ) {
+            navigator.webkitGetUserMedia(constraints, function(stream) {
+                video.src = window.URL.createObjectURL(stream);
+                video.controls = false;
+                localMediaStream = stream;
+                displayModel();
+            }, errorCallback);
+        });
     } else {
         errorCallback({
             target: video
