@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab Viewer API example</title>
+    <script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+</head>
+
+<body>
+    <iframe src="" id="api-frame" width="640" height="400" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
+    <script type="text/javascript">
+    // This example shows how to use the Sketchfab Viewer API
+    // See https://sketchfab.com/developers/viewer for the documentation
+
+    var iframe = document.getElementById( 'api-frame' );
+
+    var version = '1.0.0';
+    var urlid = '7w7pAfrCfjovwykkEeRFLGw5SXS'; // Model urlid
+    var client = new Sketchfab( version, iframe );
+
+    // Initialize the viewer with given model urlid
+    // For options, see https://sketchfab.com/developers/viewer/initialization
+    client.init( urlid, {
+
+        success: function onSuccess( api ){
+            // API is ready to use
+            // For the list of functions, see
+            // https://sketchfab.com/developers/viewer/functions
+            api.start();
+
+            // The 'viewerready' event is triggered when the model is loaded and ready
+            api.addEventListener('viewerready', function(){
+                console.log('Viewer is ready');
+            });
+        },
+
+        error: function onError() {
+            console.warn( 'Viewer error' );
+        }
+
+    } );
+    </script>
+</body>
+</html>
