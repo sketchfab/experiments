@@ -5,6 +5,7 @@
     </head>
     <body>
         <video id="video" autoplay></video>
+        <canvas height="240" width="320" id="rasterCanvas"></canvas>
 
         <iframe id="viewer" width="100%" height="100%" src="about:blank" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
 
@@ -12,10 +13,17 @@
             <h1>Sketchfab Augmented Reality</h1>
             <p>Enter a model id to view it in AR</p>
             <p>Works best in Chrome</p>
-            <input id="model" type="text" value="3a41f9bf2f43411b8523904a129b5465">
+            <input id="model" type="text" value="c632823b6c204797bd9b95dbd9f53a06">
             <button id="capture-button">play</button>
+            <button id="stop-button">stop</button>
         </div>
 
+        <div id="debug">
+
+        </div>
+
+        <script src="JSARTToolkit.js"></script>
+        <script src="sketchfab-viewer-1.0.0.js"></script>
         <script src="main-0.0.1.js"></script>
     </body>
 </html>

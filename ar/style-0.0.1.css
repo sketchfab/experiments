@@ -24,8 +24,17 @@ body {
 #controls {
     background: #FFFFFF;
     padding: 10px;
+    position: absolute;
+    top: 0;
 }
 
 #model {
     width: 220px;
+}
+
+#rasterCanvas {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    display: none;
 }
