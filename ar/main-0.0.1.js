@@ -41,35 +41,16 @@ var loadModel = function(callback) {
     // controls.style.display = 'none';
 };
 
-var rootTransform = '236';
+var rootTransform = '233';
 var getNodeList = function() {
-    clientApi.getNodeMap(function(err, result) {
 
-        if (err) {
-            console.log('Error getting nodes');
-            return;
-        }
-        console.log('Nodes', result);
+
+    clientApi.getSceneGraph( function( err, result ) {
+        console.log( result );
         track();
         console.log( result[242] );
-
-
-        clientApi.lookat([0,-10,0],[0,0,0]);
-        clientApi.getCameraLookAt(function( err2, result2) {
-            if (err2) {
-                console.log('Error getting graph');
-                return;
-            }
-            var m = result2;
-            console.log(m);
-
-
-
-
-        } );
-
-
     });
+
 };
 
 
@@ -133,21 +114,21 @@ stopButton.addEventListener('click', function() {
 
 
 var copyMarkerMatrix = function(arMat) {
-    var glMat = {};
+    var glMat = [];
     glMat[0] = arMat.m00;
-    glMat[1] = -arMat.m10;
+    glMat[1] = arMat.m10; //-arMat.m10;
     glMat[2] = arMat.m20;
     glMat[3] = 0;
     glMat[4] = arMat.m01;
-    glMat[5] = -arMat.m11;
+    glMat[5] = arMat.m11;//-arMat.m11;
     glMat[6] = arMat.m21;
     glMat[7] = 0;
-    glMat[8] = -arMat.m02;
+    glMat[8] = arMat.m02; //-arMat.m02;
     glMat[9] = arMat.m12;
-    glMat[10] = -arMat.m22;
+    glMat[10] = arMat.m22; //-arMat.m22;
     glMat[11] = 0;
     glMat[12] = arMat.m03;
-    glMat[13] = -arMat.m13;
+    glMat[13] = arMat.m13; //-arMat.m13;
     glMat[14] = arMat.m23;
     glMat[15] = 1;
     return glMat;
@@ -198,7 +179,8 @@ var track = function() {
             console.log(rootMat2);
             var eye = [0, 0, 0];
             var target = [0, 0, 1];
-            clientApi.lookat(eye, target, 0);
+            //clientApi.lookat(eye, target, 0);
+            clientApi.setMatrix(233, rootMat2);
         }
 
 
