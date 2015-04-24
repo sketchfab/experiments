@@ -1,0 +1,24 @@
+#api-frame,.instructions,.logo,.options,.share-button{position:absolute}
+.options li.selected:after,.options li:before{content:'';border-radius:50%}
+body{background:#f2f2f2;font-family:Roboto,sans-serif;padding:0;margin:0}
+.logo{top:30px;left:30px}
+.instructions{bottom:30px;right:30px;font-size:14px;color:#888}
+h2{margin:0 0 10px;text-align:right;text-transform:uppercase;font-size:14px;border-bottom:1px solid #ddd;padding-bottom:5px}
+#api-frame{display:block;left:0;top:0;width:100%;height:100%;border:0}
+.about{box-sizing:border-box;height:40px;padding:14px}
+.share-button{top:0;right:0;padding:10px}
+.fb_iframe_widget span{vertical-align:baseline!important}
+.options{display:block;right:30px;top:30px;z-index:1}
+.options ul{margin:0 0 30px;padding:0}
+.options li{position:relative;display:inline-block;list-style:none;margin:0 0 0 10px;padding:0;cursor:pointer}
+.options li.selected:before{border:2px solid rgba(0,0,0,.2)}
+.options li:before{display:inline-block;width:30px;height:30px;border:2px solid transparent}
+.options li.selected:after{position:absolute;display:block;top:12px;left:12px;width:10px;height:10px;background:#fff;box-shadow:0 0 1px #555}
+.options li.option_bracelet_rubberblue:before{background:#00B4FE}
+.options li.option_bracelet_rubberwhite:before{background:#fff}
+.options li.option_bracelet_cuir:before{background:#273137}
+.options li.option_coque_goldgloss:before{background:#ffcd3b}
+.options li.option_coque_silverrough:before{background:#ccc}
+.options li.option_coque_silverglossy:before{background:#888}
+ul.share-buttons{position:absolute;bottom:20px;left:20px;margin:0;list-style:none;padding:0}
+ul.share-buttons li{display:inline}

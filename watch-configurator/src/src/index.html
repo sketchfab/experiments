@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Watch Configurator</title>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,900,700,500,100,300' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="style/app.<%= version %>.css">
+</head>
+
+<body>
+<iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
+
+<img class="logo" src="assets/watch-logo.png" alt="" width="100">
+
+<div class="options"></div>
+<div class="select"></div>
+
+<div class="instructions">
+  Click to rotate<br>
+  Scroll to zoom
+</div>
+
+<ul class="share-buttons">
+  <li><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Flabs.sketchfab.com%2Fexperiments%2Fwatch-configurator%2F&t=" title="Share on Facebook" target="_blank" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(document.URL) + '&t=' + encodeURIComponent(document.URL)); return false;"><img src="assets/Facebook.png"></a></li>
+  <li><a href="https://twitter.com/intent/tweet?source=https%3A%2F%2Flabs.sketchfab.com%2Fexperiments%2Fwatch-configurator%2F&text=:%20https%3A%2F%2Flabs.sketchfab.com%2Fexperiments%2Fwatch-configurator%2F&via=Sketchfab" target="_blank" title="Tweet" onclick="window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(document.title) + ':%20'  + encodeURIComponent(document.URL)); return false;"><img src="assets/Twitter.png"></a></li>
+  <li><a href="https://plus.google.com/share?url=https%3A%2F%2Flabs.sketchfab.com%2Fexperiments%2Fwatch-configurator%2F" target="_blank" title="Share on Google+" onclick="window.open('https://plus.google.com/share?url=' + encodeURIComponent(document.URL)); return false;"><img src="assets/Google+.png"></a></li>
+</ul>
+
+<script type="text/javascript" src="js/vendors/sketchfab-viewer-1.0.0.js"></script>
+<script type="text/javascript" src="js/app.<%= version %>.js"></script>
+</body>
+</html>
