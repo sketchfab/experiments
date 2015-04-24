@@ -8,3 +8,4 @@ This repository contains some mad science!
 * [viewer-sharing](./viewer-sharing): View a 3D model with the same point of view, across multiple browsers.
 * [ar](./ar): View a 3D model in augmented reality
 * [sketchfab-viewer-api-example](./sketchfab-viewer-api-example): Basic example of how to use Viewer API
+* [watch-configurator](./watch-configurator): configure your Watch with options
