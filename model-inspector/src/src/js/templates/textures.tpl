@@ -7,4 +7,8 @@
         <span class="field">Total Pixels</span>
         <span class="value"><%= textures.pixelCount %></span>
     </li>
+    <li>
+        <span class="field">VRAM</span>
+        <span class="value"><%= textures.vram %></span>
+    </li>
 </ul>

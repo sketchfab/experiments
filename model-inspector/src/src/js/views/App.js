@@ -148,6 +148,18 @@ var AppView = Backbone.View.extend({
             url: 'https://sketchfab.com/i/models/' + this.urlid + '/textures',
             success: function(response) {
 
+                // Convert bits to human-readable unit
+                function humanSize( size ) {
+                    var suffixes = [ 'b', 'KiB', 'MiB', 'GiB' ];
+
+                    for ( var i = 0; i < suffixes.length; i++, size /= 1024 ) {
+                        if ( size < 1024 ) {
+                            return Math.floor(size) + ' ' + suffixes[ i ];
+                        }
+                    }
+                    return Math.floor(size) + ' ' + suffixes[ suffixes.length - 1 ];
+                }
+
                 var textures = response.results;
                 for (var i = 0; i < textures.length; i++) {
                     for (var j = 0; j < textures[i].images.length; j++) {
@@ -178,6 +190,7 @@ var AppView = Backbone.View.extend({
                     }
                 }
                 textures.pixelCount = sumTextureSize;
+                textures.vram = humanSize(sumTextureSize * 4);
 
 
                 $('.textures').html(template({
