@@ -9,3 +9,4 @@ This repository contains some mad science!
 * [ar](./ar): View a 3D model in augmented reality
 * [sketchfab-viewer-api-example](./sketchfab-viewer-api-example): Basic example of how to use Viewer API
 * [watch-configurator](./watch-configurator): configure your Watch with options
+* [model-inspector](./model-inspector): inspect a model
