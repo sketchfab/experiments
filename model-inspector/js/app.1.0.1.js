@@ -12385,7 +12385,7 @@ module.exports = config;
 module.exports = "<ul class=\"stat\">\n    <li>\n        <span class=\"field\">Vertices</span>\n        <span class=\"value\"><%= info.vertexCount %></span>\n    </li>\n    <li>\n        <span class=\"field\">Faces</span>\n        <span class=\"value\"><%= info.faceCount %></span>\n    </li>\n    <li>\n        <span class=\"field\">Renderer</span>\n        <span class=\"value\"><%= info.options.shading.renderer %></span>\n    </li>\n    <li>\n        <span class=\"field\">Materials</span>\n        <span class=\"value\"><%= info.materialsCount %></span>\n    </li>\n</ul>\n";
 
 },{}],7:[function(require,module,exports){
-module.exports = "<ul class=\"stat\">\n    <li>\n        <span class=\"field\">Textures</span>\n        <span class=\"value\"><%= textures.count %></span>\n    </li>\n    <li>\n        <span class=\"field\">Total Pixels</span>\n        <span class=\"value\"><%= textures.pixelCount %></span>\n    </li>\n    <li>\n        <span class=\"field\">VRAM</span>\n        <span class=\"value\"><%= textures.vram %></span>\n    </li>\n</ul>\n";
+module.exports = "<ul class=\"stat\">\n    <li>\n        <span class=\"field\">Textures</span>\n        <span class=\"value\"><%= textures.count %></span>\n    </li>\n    <li>\n        <span class=\"field\">Total Pixels</span>\n        <span class=\"value\"><%= textures.pixelCount %></span>\n    </li>\n</ul>\n";
 
 },{}],8:[function(require,module,exports){
 'use strict';
@@ -12538,18 +12538,6 @@ var AppView = Backbone.View.extend({
             url: 'https://sketchfab.com/i/models/' + this.urlid + '/textures',
             success: function(response) {
 
-                // Convert bits to human-readable unit
-                function humanSize( size ) {
-                    var suffixes = [ 'b', 'KiB', 'MiB', 'GiB' ];
-
-                    for ( var i = 0; i < suffixes.length; i++, size /= 1024 ) {
-                        if ( size < 1024 ) {
-                            return Math.floor(size) + ' ' + suffixes[ i ];
-                        }
-                    }
-                    return Math.floor(size) + ' ' + suffixes[ suffixes.length - 1 ];
-                }
-
                 var textures = response.results;
                 for (var i = 0; i < textures.length; i++) {
                     for (var j = 0; j < textures[i].images.length; j++) {
@@ -12580,7 +12568,6 @@ var AppView = Backbone.View.extend({
                     }
                 }
                 textures.pixelCount = sumTextureSize;
-                textures.vram = humanSize(sumTextureSize * 4);
 
 
                 $('.textures').html(template({
