@@ -1,0 +1,98 @@
+body {
+    background: #f2f2f2;
+    font-family: 'Roboto', sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+/**
+ * Instructions
+ ******************************************************************************/
+.instructions {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    font-size: 14px;
+    color: #888;
+}
+
+/**
+ * Viewer
+ ******************************************************************************/
+#api-frame {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.external {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    left: 15px;
+    bottom: 15px;
+
+    overflow: hidden;
+    text-indent: -1000em;
+}
+
+/**
+ * Options
+ ******************************************************************************/
+.options {
+    display: block;
+    position: absolute;
+    right: 40px;
+    top: 40px;
+    z-index: 1;
+}
+    .options ul {
+        margin: 0 0 30px 0;
+        padding: 0;
+    }
+    .options li {
+        position: relative;
+        display: inline-block;
+        list-style: none;
+        margin: 0 0 0 10px;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .options li.selected:before {
+        border: 4px solid rgba(255,255,255,1);
+    }
+    .options li:before {
+        box-sizing: border-box;
+        content: '';
+        display: inline-block;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 4px solid transparent;
+    }
+    /*.options li.selected:after {
+        content: '';
+        position: absolute;
+        display: block;
+        top: 12px;
+        left: 12px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 0 1px #555;
+    }*/
+
+    .options li.options_metallic:before {
+        background: #AAA url('../assets/metal.png') no-repeat center center;
+        background-size: 48px 48px;
+    }
+    .options li.options_leather:before {
+        background: #aa5d25 url('../assets/leather.png') no-repeat center center;
+        background-size: 48px 48px;
+    }
