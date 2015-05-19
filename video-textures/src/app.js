@@ -1,35 +1,35 @@
 window.materialName = 'Display';
 window.apps = [{
-    video: 'https://mauricesvay.s3.amazonaws.com/skfb-textures/shazam.webm',
+    video: 'https://sketchfab.github.io/experiments/video-textures/videos/shazam.webm',
     camera: {
         "position": [-5.20412822581436, -19.121745822133644, 3.154700374905264],
         "target": [0.000005142699927019269, -0.3250986610075804, 0.0890636007763596]
     }
 }, {
-    video: 'https://mauricesvay.s3.amazonaws.com/skfb-textures/yahoo-weather.webmhd.webm',
+    video: 'https://sketchfab.github.io/experiments/video-textures/videos/yahoo.webm',
     camera: {
         "position": [10.45378074877901, -14.66936406657716, 2.0479698873912184],
         "target": [0.000005142699927019269, -0.3250986610075804, 0.0890636007763596]
     }
 }, {
-    video: 'https://mauricesvay.s3.amazonaws.com/skfb-textures/runtastic.webm',
+    video: 'https://sketchfab.github.io/experiments/video-textures/videos/runtastic.webm',
     camera: {
         "position": [0.47380569188722443, -24.291117279406077, 1.7677300681241275],
         "target": [0.000005142699927019269, -0.3250986610075804, 0.0890636007763596]
     }
 }, {
-    video: 'https://mauricesvay.s3.amazonaws.com/skfb-textures/facetune.webm',
+    video: 'https://sketchfab.github.io/experiments/video-textures/videos/facetune.webm',
     camera: {
-        "position": [0.23372917845614702, -12.10170211984558, 0.327936329734692],
-        "target": [0.000005142699927019269, -0.3250986610075804, 0.0890636007763596]
+        "position": [6.362053080095855, -13.570428558563714, -7.621101955228509],
+        "target": [-0.3669375256516855, 0.6024138807750593, -0.07880321051119216]
     }
 }, ];
-var urlid = '1c7d647d87114a05b78b50c69ba62981';
+var urlid = '5bcc0b3292f14202b96cfd1e34f790f6';
 
 var iframe = document.querySelector('#api-frame');
 var buttons = document.querySelectorAll('.app');
 var client = new Sketchfab('1.0.0', iframe);
-client._url = 'https://sketchfab-local.com/models/XXXX/embed';
+// client._url = 'https://sketchfab-local.com/models/XXXX/embed';
 
 setTimeout(function() {
     client.init(urlid, {
@@ -84,9 +84,9 @@ for (var i = 0; i < buttons.length; i++) {
     })(i)
 }
 
-var btGetCamera = document.querySelector('.getcamera');
-btGetCamera.addEventListener('click', function(){
-    api.getCameraLookAt(function(err, camera){
-        console.log(JSON.stringify(camera));
-    });
-}, false);
+// var btGetCamera = document.querySelector('.getcamera');
+// btGetCamera.addEventListener('click', function() {
+//     api.getCameraLookAt(function(err, camera) {
+//         console.log(JSON.stringify(camera));
+//     });
+// }, false);
