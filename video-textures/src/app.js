@@ -68,8 +68,14 @@ function swithToApp(app) {
         api.getMaterialsByName(window.materialName, function(err, materials) {
             if (!err) {
                 console.log(materials);
-                materials[0].shadeless = true;
+                //Diffuse
                 materials[0].channels['DiffuseColor'].texture = {
+                    uid: textureId
+                };
+                //Emission
+                materials[0].channels['EmitColor'].enable = true;
+                materials[0].channels['EmitColor'].factor = 1;
+                materials[0].channels['EmitColor'].texture = {
                     uid: textureId
                 };
                 api.setMaterial(materials[0]);
