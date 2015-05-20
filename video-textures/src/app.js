@@ -28,6 +28,8 @@ var urlid = '5bcc0b3292f14202b96cfd1e34f790f6';
 
 var iframe = document.querySelector('#api-frame');
 var buttons = document.querySelectorAll('.app');
+var form = document.querySelector('.custom-image');
+
 var client = new Sketchfab('1.0.0', iframe);
 // client._url = 'https://sketchfab-local.com/models/XXXX/embed';
 
@@ -83,6 +85,22 @@ for (var i = 0; i < buttons.length; i++) {
         }, false);
     })(i)
 }
+
+form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var url = document.querySelector('.url').value;
+    if (url.replace('\s') !== '') {
+        console.log(url);
+        swithToApp({
+            video: url,
+            camera: {
+                "position": [0.47380569188722443, -24.291117279406077, 1.7677300681241275],
+                "target": [0.000005142699927019269, -0.3250986610075804, 0.0890636007763596]
+            }
+        });
+    }
+}, false);
+
 
 // var btGetCamera = document.querySelector('.getcamera');
 // btGetCamera.addEventListener('click', function() {
