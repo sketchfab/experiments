@@ -6,6 +6,13 @@ var buttons = document.querySelectorAll('.app');
 var form = document.querySelector('.custom-image');
 var client = new Sketchfab('1.0.0', iframe);
 
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
 setTimeout(function() {
     client.init(urlid, {
 
@@ -14,6 +21,8 @@ setTimeout(function() {
         ui_controls: 0,
         ui_stop: 0,
         camera: 0,
+        cardboard: getParameterByName('cardboard') || 0,
+        oculus: getParameterByName('oculus') || 0,
 
         success: function onInitSuccess(api) {
             // Augment API with some helpers
