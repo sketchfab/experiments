@@ -18,7 +18,7 @@ setTimeout(function() {
 
         continuousRender: 1,
         ui_infos: 0,
-        ui_controls: 0,
+        ui_controls: 1,
         ui_stop: 0,
         camera: 0,
         cardboard: getParameterByName('cardboard') || 0,
