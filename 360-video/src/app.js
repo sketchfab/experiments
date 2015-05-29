@@ -13,6 +13,7 @@ setTimeout(function() {
         ui_infos: 0,
         ui_controls: 0,
         ui_stop: 0,
+        camera: 0,
 
         success: function onInitSuccess(api) {
             // Augment API with some helpers
