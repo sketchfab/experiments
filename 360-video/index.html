@@ -14,6 +14,15 @@
 
 <body>
 <iframe id="api-frame" width="640" height="400" style="border:0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+<div class="selector">
+    <label for="videourl">Enter a 360° video URL:</label> (or choose one of these:
+    <a href="https://sketchfab.github.io/experiments/360-video/videos/time-couch.webm">Red Couch</a>,
+    <a href="https://sketchfab.github.io/experiments/360-video/videos/NYT_JR_Moped_Copter.webm">JR in NY</a>)
+    <form action="">
+        <input type="text" value="" id="videourl" name="videourl" placeholder="https://example.org/video.webm" size="80">
+        <button type="submit">Load video</button>
+    </form>
+</div>
 <script type="text/javascript" src="src/app.js"></script>
 </body>
 </html>

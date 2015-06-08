@@ -14,6 +14,32 @@ function getParameterByName(name) {
 }
 
 setTimeout(function() {
+
+    var links = document.querySelector('.selector');
+    links.addEventListener('click', function(e){
+        if (e.target.tagName === 'A') {
+            e.preventDefault();
+            var url = e.target.href;
+            setVideo(url);
+        }
+    }, false);
+
+    var form = document.querySelector('form');
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var url = document.querySelector('#videourl').value;
+        console.log(url);
+        if (url.replace(/\s+/,'') === '') {
+            alert('Please enter a valid URL');
+            return;
+        }
+        if (!url.match(/^http(s*)\:\/\//,'')) {
+            alert('Please enter a valid URL');
+            return;
+        }
+        setVideo(url);
+    });
+
     client.init(urlid, {
 
         continuousRender: 1,
@@ -29,7 +55,8 @@ setTimeout(function() {
             api = augment.extend(api, SketchfabViewerPlusMixin);
             window.api = api;
             api.addEventListener('viewerready', function() {
-                setVideo('https://sketchfab.github.io/experiments/360-video/videos/time-couch.webm');
+                document.querySelector('.selector').className += ' active';
+                // setVideo('https://sketchfab.github.io/experiments/360-video/videos/time-couch.webm');
             });
             api.start();
         },
@@ -53,6 +80,8 @@ function setVideo(url) {
                     uid: textureId
                 };
                 api.setMaterial(materials[0]);
+            } else {
+                alert('The video can not be loaded');
             }
         });
     });
