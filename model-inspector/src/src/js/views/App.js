@@ -31,6 +31,7 @@ var AppView = Backbone.View.extend({
             preload: 1,
             ui_infos: 0,
             ui_stop: 0,
+            debug3d: 1
         };
 
         this.urlid = getParameterByName('urlid');
@@ -112,9 +113,9 @@ var AppView = Backbone.View.extend({
             function renderNode(node) {
 
                 var icons = {
-                    'Group' : 'ion-folder',
-                    'Geometry' : 'ion-document',
-                    'MatrixTransform' : 'ion-arrow-expand'
+                    'Group': 'ion-folder',
+                    'Geometry': 'ion-document',
+                    'MatrixTransform': 'ion-arrow-expand'
                 }
 
                 var out = '';
@@ -142,22 +143,22 @@ var AppView = Backbone.View.extend({
 
     getTextures: function() {
 
-        var template = _.template( tplTextures );
+        var template = _.template(tplTextures);
 
         $.ajax({
             url: 'https://sketchfab.com/i/models/' + this.urlid + '/textures',
             success: function(response) {
 
                 // Convert bits to human-readable unit
-                function humanSize( size ) {
-                    var suffixes = [ 'b', 'KiB', 'MiB', 'GiB' ];
+                function humanSize(size) {
+                    var suffixes = ['b', 'KiB', 'MiB', 'GiB'];
 
-                    for ( var i = 0; i < suffixes.length; i++, size /= 1024 ) {
-                        if ( size < 1024 ) {
-                            return Math.floor(size) + ' ' + suffixes[ i ];
+                    for (var i = 0; i < suffixes.length; i++, size /= 1024) {
+                        if (size < 1024) {
+                            return Math.floor(size) + ' ' + suffixes[i];
                         }
                     }
-                    return Math.floor(size) + ' ' + suffixes[ suffixes.length - 1 ];
+                    return Math.floor(size) + ' ' + suffixes[suffixes.length - 1];
                 }
 
                 var textures = response.results;
@@ -176,12 +177,12 @@ var AppView = Backbone.View.extend({
                 var textureSize;
                 var maxTextureSize;
                 var sumTextureSize = 0;
-                for (var i=0; i<response.results.length; i++) {
+                for (var i = 0; i < response.results.length; i++) {
 
                     texture = response.results[i];
 
                     maxTextureSize = 0;
-                    for (var j=0; j<texture.images.length; j++) {
+                    for (var j = 0; j < texture.images.length; j++) {
                         textureSize = texture.images[j].width * texture.images[j].height;
                         if (textureSize > maxTextureSize) {
                             maxTextureSize = textureSize;
@@ -202,7 +203,7 @@ var AppView = Backbone.View.extend({
 
     getModelInfo: function() {
 
-        var template = _.template( tplInfo );
+        var template = _.template(tplInfo);
 
         $.ajax({
             url: 'https://sketchfab.com/v2/models/' + this.urlid,
