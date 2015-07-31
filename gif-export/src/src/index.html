@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab GIF Exporter</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300|Titillium+Web:700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="style/app.1.0.0.css">
+</head>
+
+<body>
+<div class="app">
+    <div class="search">
+        <div class="search-inner">
+            <form class="search-form" action="" method="get">
+                <input type="text" value="" name="q" placeholder="Search model or id">
+                <button type="submit" class="btn">Search</button>
+            </form>
+            <div class="loading"></div>
+            <div class="search-results">
+            </div>
+        </div>
+    </div>
+
+    <div class="generator panel">
+        <form class="tools">
+
+            <div class="generator-header">
+                <div class="model-info"></div>
+                <div class="tools-action">
+                    <button type="submit" disabled class="btn btn-primary" data-action="generate">Make GIF</button>
+                </div>
+            </div>
+
+            <div class="viewer">
+                <div class="preview"></div>
+                <div class="progress">
+                    <div class="message"></div>
+                </div>
+                <div class="share">
+                    <a class="btn save">Save GIF</a>
+                    <!-- <button class="btn giphy">Post to Giphy</button>
+                    <button class="btn imgur">Post to Imgur</button> -->
+                </div>
+            </div>
+
+            <div class="tools-options">
+                <div class="field">
+                    <label for="width">Resolution</label>
+                    <input type="text" name="width" max="4096" value="320" size="3" id="width">
+                    ×
+                    <input type="text" name="height" max="4096" value="240" size="3">
+                </div>
+                <div class="field">
+                    <label for="duration">Duration</label>
+                    <select name="duration" id="duration">
+                        <option value="1">1s</option>
+                        <option value="5">5s</option>
+                        <option value="10">10s</option>
+                        <option value="15">15s</option>
+                        <option value="20">20s</option>
+                        <option value="30">30s</option>
+                    </select>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+<script type="text/javascript" src="assets/gif.js"></script>
+<script type="text/javascript" src="js/app.1.0.0.js"></script>
+
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-22680456-16', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>

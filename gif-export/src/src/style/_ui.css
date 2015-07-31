@@ -1,0 +1,47 @@
+.panel {
+    padding: 15px;
+
+    border-radius: 4px;
+
+    background: #ffffff;
+    box-shadow: 0 1px 5px 0 rgba(85, 85, 85, 0.15);
+}
+
+.btn {
+    display: inline-block;
+
+    border: 2px solid transparent;
+    border-radius: 4px;
+    padding: 0 13px;
+
+    font-family: 'Titillium Web', sans-serif;
+    font-size: .9em;
+    font-weight: 600;
+    text-align: center;
+    text-shadow: none;
+    text-transform: uppercase;
+    line-height: 28px;
+    text-decoration: none;
+
+    background: #CCC;
+    color: #555;
+
+    cursor: pointer;
+    outline: none;
+    transition: background .2s;
+}
+
+.btn-primary {
+    background: #1caad9;
+    color: #ffffff;
+}
+.btn-primary:hover {
+    background: #1687ac;
+}
+
+.btn[disabled],
+.btn[disabled]:hover {
+    color: #cccccc;
+    background: #e7e7e7;
+    cursor: default;
+}
