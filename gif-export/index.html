@@ -2,128 +2,84 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Sketchfab Share</title>
-    <script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
-    <script type="text/javascript" src="gif.js"></script>
-    <script type="text/javascript" src="BezierEasing.js"></script>
-    <script type="text/javascript" src="skfb2gif-animations.js"></script>
-    <script type="text/javascript" src="skfb2gif.js"></script>
-    <style type="text/css">
-    body {
-        font-family: sans-serif;
-    }
-    </style>
+    <title>Sketchfab GIF Exporter</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300|Titillium+Web:700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="style/app.1.0.0.css">
 </head>
 
 <body>
-<form action="" method="post" id="shareform">
-    <label for="urlid">Enter model URL ID:</label>
-    <input type="text" size="40" name="urlid" id="urlid" placeholder="e.g: 387889bbe73648c38589a3fffd1f876c">
-    <button id="makegif" type="submit">Share</button>
-</form>
+<div class="app">
+    <div class="search">
+        <div class="search-inner">
+            <form class="search-form" action="" method="get">
+                <input type="text" value="" name="q" placeholder="Search model or id">
+                <button type="submit" class="btn">Search</button>
+            </form>
+            <div class="loading"></div>
+            <div class="search-results">
+            </div>
+        </div>
+    </div>
 
-<pre>
-Try one of these:
-f1bcd7cdd23143f88f513209b10df815
-387889bbe73648c38589a3fffd1f876c
-b93539e49224408a934d148edb7d6090
-7e841ede7f3f4155b05f864fbdbe370a
-</pre>
+    <div class="generator panel">
+        <form class="tools">
 
-<div id="output"></div>
+            <div class="generator-header">
+                <div class="model-info"></div>
+                <div class="tools-action">
+                    <button type="submit" disabled class="btn btn-primary" data-action="generate">Make GIF</button>
+                </div>
+            </div>
+
+            <div class="viewer">
+                <div class="preview"></div>
+                <div class="progress">
+                    <div class="message"></div>
+                </div>
+                <div class="share">
+                    <a class="btn save">Save GIF</a>
+                    <!-- <button class="btn giphy">Post to Giphy</button>
+                    <button class="btn imgur">Post to Imgur</button> -->
+                </div>
+            </div>
+
+            <div class="tools-options">
+                <div class="field">
+                    <label for="width">Resolution</label>
+                    <input type="text" name="width" max="4096" value="320" size="3" id="width">
+                    ×
+                    <input type="text" name="height" max="4096" value="240" size="3">
+                </div>
+                <div class="field">
+                    <label for="duration">Duration</label>
+                    <select name="duration" id="duration">
+                        <option value="1">1s</option>
+                        <option value="5">5s</option>
+                        <option value="10">10s</option>
+                        <option value="15">15s</option>
+                        <option value="20">20s</option>
+                        <option value="30">30s</option>
+                    </select>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+<script type="text/javascript" src="assets/gif.js"></script>
+<script type="text/javascript" src="js/app.1.0.0.js"></script>
 
 <script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-var upload = true;
-var bt = document.querySelector('#makegif');
-var title = '';
-var description = '';
-
-shareform.addEventListener('submit', function( e ){
-
-    e.preventDefault();
-
-    var originalText = bt.innerText;
-    bt.innerText = 'Please wait...';
-    bt.disabled = 'disabled';
-
-    var urlid = document.querySelector('#urlid').value.replace(/^\s+|\s+$/g, '');
-    console.log(urlid);
-
-    if (urlid === '') {
-        alert('Please enter an URLID');
-        bt.innerText = originalText;
-        bt.removeAttribute('disabled');
-        return;
-    }
-
-    // Get model info
-    var req = new XMLHttpRequest();
-    req.open('GET', 'https://sketchfab.com/v2/models/' + urlid, false);
-    req.send(null);
-    if(req.status == 200) {
-        info = JSON.parse(req.responseText);
-        title = info.name + ' by ' + info.user.displayName;
-        description = 'https://sketchfab.com/models/' + urlid;
-    }
-
-    // Try to get annotations
-    var req = new XMLHttpRequest();
-    req.open('GET', 'https://sketchfab.com/i/models/' + urlid + '/hotspots', false);
-    req.send(null);
-    if(req.status == 200) {
-        annotations = JSON.parse(req.responseText).results;
-        window.annotations = annotations;
-    }
-
-    // Capture
-    var skfbgif = new SketchfabGif(urlid, {
-        width: 400,
-        height: 250,
-        duration: 5
-    });
-
-    skfbgif.on('progress', function( res ){
-        // console.info( res );
-        bt.innerText = 'Please wait... ' + res.progress + '%';
-
-        if ( res.progress === 100 ) {
-
-            bt.innerText = 'Almost there...';
-
-            var url = URL.createObjectURL(res.data);
-            console.log(url);
-
-            if (upload) {
-                // Upload to imgur
-                var fd = new FormData();
-                fd.append("image", res.data, '3d-sketchfab-model.gif');
-                fd.append("title", title);
-                fd.append("description", description);
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", "https://api.imgur.com/3/image");
-                xhr.setRequestHeader('Authorization', 'Client-ID 0c3e658c3d61441');
-                xhr.onload = function() {
-                    var response = JSON.parse(xhr.responseText);
-                    console.log(response);
-                    window.open('http://imgur.com/' + response.data.id);
-                    bt.innerText = originalText;
-                    bt.removeAttribute('disabled');
-                };
-                xhr.send(fd);
-            } else {
-                var div = document.querySelector('#output');
-                div.innerHTML = ('<img src="' + url + '">');
-                bt.innerText = originalText;
-                bt.removeAttribute('disabled');
-            }
-
-        }
-
-    });
-    skfbgif.start();
-
-}, false);
+ga('create', 'UA-22680456-16', 'auto');
+ga('send', 'pageview');
 </script>
 </body>
 </html>
