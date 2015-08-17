@@ -12683,6 +12683,10 @@ var Backbone = require('backbone');
 var CAMERA_POLLING_INTERVAL = 500;
 var CAMERA_DELTA = 0.00001;
 
+var sanitizeFilename = function(s) {
+    return s.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+}
+
 var AppView = Backbone.View.extend({
 
     el: '.app',
@@ -12696,6 +12700,7 @@ var AppView = Backbone.View.extend({
         var version = '1.0.0';
         this.iframe = this.$el.find('#viewer-frame').get(0);
         this.client = new Sketchfab(version, this.iframe);
+        this.filename = 'screenshot.png';
     },
 
     onLoadModelClick: function(e) {
@@ -12718,6 +12723,24 @@ var AppView = Backbone.View.extend({
             error: function onError() {
                 console.error('Viewer error');
             }
+        });
+
+        this.getModelInfo(urlid).then(
+            function(response) {
+                this.filename = sanitizeFilename(response.name) + '.png';
+            }.bind(this),
+            function() {
+                //Can't find model info
+            }.bind(this)
+        );
+    },
+
+    getModelInfo: function(urlid) {
+        return $.ajax({
+            url: 'https://api.sketchfab.com/v2/models/' + urlid,
+            crossDomain: true,
+            dataType: 'json',
+            type: 'GET'
         });
     },
 
@@ -12774,8 +12797,15 @@ var AppView = Backbone.View.extend({
         var blob = new Blob([arraybuffer], {
             type: 'application/octet-stream'
         });
-        var url = (window.webkitURL || window.URL).createObjectURL(blob);
-        window.open(url);
+
+        var hasSaveAs = !!window.saveAs;
+
+        if (hasSaveAs) {
+            saveAs(blob, this.filename);
+        } else {
+            var url = (window.webkitURL || window.URL).createObjectURL(blob);
+            window.open(url);
+        }
     },
 
     onTakeScreenshotClick: function(e) {
