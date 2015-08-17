@@ -1,0 +1,9 @@
+# OS-generated files
+.apdisk
+.DS_Store
+*~
+.#*
+
+# Node
+node_modules
+.jshintrc
