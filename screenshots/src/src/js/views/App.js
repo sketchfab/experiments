@@ -1,0 +1,117 @@
+'use strict';
+
+var $ = require('jquery');
+var _ = require('underscore');
+var Backbone = require('backbone');
+
+var CAMERA_POLLING_INTERVAL = 500;
+var CAMERA_DELTA = 0.00001;
+
+var AppView = Backbone.View.extend({
+
+    el: '.app',
+
+    events: {
+        'submit .form-load': 'onLoadModelClick',
+        'submit .form-options': 'onTakeScreenshotClick'
+    },
+
+    initialize: function() {
+        var version = '1.0.0';
+        this.iframe = this.$el.find('#viewer-frame').get(0);
+        this.client = new Sketchfab(version, this.iframe);
+    },
+
+    onLoadModelClick: function(e) {
+        e.preventDefault();
+        var urlid = $.trim(this.$el.find('input[name="urlid"]').val());
+        this.initViewer(urlid);
+    },
+
+    initViewer: function(urlid) {
+        this.client.init(urlid, {
+            overrideDevicePixelRatio: 1,
+            camera: 0,
+            success: function onSuccess(api) {
+                this.api = api;
+                api.start();
+                api.addEventListener('viewerready', function() {
+                    this.onViewerReady();
+                }.bind(this));
+            }.bind(this),
+            error: function onError() {
+                console.error('Viewer error');
+            }
+        });
+    },
+
+    onViewerReady: function() {
+        this.enableControls();
+    },
+
+    enableControls: function() {
+        this.$el.find('.options').addClass('active');
+    },
+
+    disableControls: function() {
+        this.$el.find('.options').removeClass('active');
+    },
+
+
+    showProgress: function() {
+        this.$el.find('.loader').addClass('active');
+    },
+
+    hideProgress: function() {
+        this.$el.find('.loader').removeClass('active');
+    },
+
+    resizeViewer: function(width, height) {
+        var $viewer = $(this.iframe);
+        $viewer.css({
+            width: width,
+            height: height
+        });
+    },
+
+    takeScreenshot: function(width, height) {
+
+        this.showProgress();
+        this.resizeViewer(width + 'px', height + 'px');
+        this.disableControls();
+
+        this.api.getScreenShot(width, width * (width / height), 'image/png', function(err, result) {
+            this.resizeViewer('100%', '100%');
+            this.hideProgress();
+            this.enableControls();
+            this.saveImage(result);
+        }.bind(this));
+    },
+
+    saveImage: function(b64Image) {
+        var image_data = atob(b64Image.split(',')[1]);
+        var arraybuffer = new ArrayBuffer(image_data.length);
+        var view = new Uint8Array(arraybuffer);
+        for (var i = 0; i < image_data.length; i++) {
+            view[i] = image_data.charCodeAt(i) & 0xff;
+        }
+        var blob = new Blob([arraybuffer], {
+            type: 'application/octet-stream'
+        });
+        var url = (window.webkitURL || window.URL).createObjectURL(blob);
+        window.open(url);
+    },
+
+    onTakeScreenshotClick: function(e) {
+        e.preventDefault();
+        var width = parseInt(this.$el.find('input[name="width"]').val(), 10);
+        var height = parseInt(this.$el.find('input[name="height"]').val(), 10);
+
+        width = Math.min(width, 4096);
+        height = Math.min(height, 4096);
+
+        this.takeScreenshot(width, height);
+    }
+});
+
+module.exports = AppView;
