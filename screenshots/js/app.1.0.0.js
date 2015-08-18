@@ -12693,7 +12693,8 @@ var AppView = Backbone.View.extend({
 
     events: {
         'submit .form-load': 'onLoadModelClick',
-        'submit .form-options': 'onTakeScreenshotClick'
+        'submit .form-options': 'onTakeScreenshotClick',
+        'click [data-action="setCamera"]': 'setCamera'
     },
 
     initialize: function() {
@@ -12733,6 +12734,8 @@ var AppView = Backbone.View.extend({
                 //Can't find model info
             }.bind(this)
         );
+
+        this.startCameraPolling(100);
     },
 
     getModelInfo: function(urlid) {
@@ -12817,6 +12820,65 @@ var AppView = Backbone.View.extend({
         height = Math.min(height, 4096);
 
         this.takeScreenshot(width, height);
+    },
+
+    startCameraPolling: function(interval) {
+        this.$cameraPositionX = this.$el.find('input[name="cameraPositionX"]');
+        this.$cameraPositionY = this.$el.find('input[name="cameraPositionY"]');
+        this.$cameraPositionZ = this.$el.find('input[name="cameraPositionZ"]');
+
+        this.$cameraTargetX = this.$el.find('input[name="cameraTargetX"]');
+        this.$cameraTargetY = this.$el.find('input[name="cameraTargetY"]');
+        this.$cameraTargetZ = this.$el.find('input[name="cameraTargetZ"]');
+
+        this.cameraTimer = setInterval(this.pollCamera.bind(this), interval);
+    },
+
+    pollCamera: function() {
+        if (!this.api || !this.api.getCameraLookAt) {
+            return;
+        }
+
+        this.api.getCameraLookAt(function(err, camera) {
+            this.$cameraPositionX.val(parseFloat(camera.position[0]).toFixed(5));
+            this.$cameraPositionY.val(parseFloat(camera.position[1]).toFixed(5));
+            this.$cameraPositionZ.val(parseFloat(camera.position[2]).toFixed(5));
+
+            this.$cameraTargetX.val(parseFloat(camera.target[0]).toFixed(5));
+            this.$cameraTargetY.val(parseFloat(camera.target[1]).toFixed(5));
+            this.$cameraTargetZ.val(parseFloat(camera.target[2]).toFixed(5));
+        }.bind(this));
+    },
+
+    setCamera: function(e) {
+        e.preventDefault();
+        var $target = $(e.target);
+        var angle = $target.val();
+
+        var cameras = {
+            'front': {
+                position: [0.0, -5.0, 0.0],
+                target: [0.0, 0.0, 0.0]
+            },
+            'back': {
+                position: [0.0, -5.0, 0.0],
+                target: [0.0, 0.0, 0.0]
+            },
+            'left': {
+                position: [-5, 0, 0],
+                target: [0, 0, 0]
+            },
+            'right': {
+                position: [5, 0, 0],
+                target: [0, 0, 0]
+            }
+        }
+        console.log(cameras[angle]);
+        this.api.setCameraLookAt(
+            cameras[angle].position,
+            cameras[angle].target,
+            0.1
+        );
     }
 });
 
