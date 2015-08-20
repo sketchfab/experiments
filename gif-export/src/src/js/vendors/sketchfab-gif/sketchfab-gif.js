@@ -112,7 +112,7 @@ SketchfabGif.prototype.capture = function(api, nb, callback) {
         api.getCameraLookAt(function(err, camera) {
 
             // Camera animation is given by custom function
-            var newCamera = SketchfabGifAnimations.turntable( camera, nb - i, nb);
+            var newCamera = SketchfabGifAnimations.turntable(camera, nb - i, nb);
 
             api.lookat(
                 newCamera.position,
@@ -128,7 +128,7 @@ SketchfabGif.prototype.capture = function(api, nb, callback) {
                     image.src = result;
                     self.images.push(image);
                 });
-                setTimeout(function(){
+                setTimeout(function() {
                     _capture(i - 1);
                 }, 100);
             }, 30);

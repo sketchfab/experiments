@@ -6,6 +6,7 @@ var Backbone = require('backbone');
 
 var SketchfabSDK = require('../vendors/sketchfab-sdk/Sketchfab');
 var SketchfabGif = require('../vendors/sketchfab-gif/sketchfab-gif');
+var SketchfabWebm = require('../vendors/sketchfab-webm');
 
 var tplModelInfo = _.template(require('./GeneratorModelInfo.tpl'));
 
@@ -60,6 +61,7 @@ var GeneratorView = Backbone.View.extend({
         var width = parseInt(this.$el.find('input[name="width"]').val(), 10);
         var height = parseInt(this.$el.find('input[name="height"]').val(), 10);
         var duration = parseInt(this.$el.find('select[name="duration"]').val(), 10);
+        var format = this.$el.find('select[name="format"]').val();
 
         this.$el.find('.viewer .preview').empty();
 
@@ -67,12 +69,21 @@ var GeneratorView = Backbone.View.extend({
         this.showProgress();
         this.updateProgress('Loading model...');
 
-        var skfbgif = new SketchfabGif(this.urlid, {
-            width: width,
-            height: height,
-            duration: duration
-        });
-        skfbgif.on('progress', function(res) {
+        if (format === 'gif') {
+            var sequence = new SketchfabGif(this.urlid, {
+                width: width,
+                height: height,
+                duration: duration
+            });
+        } else if (format === 'webm') {
+            var sequence = new SketchfabWebm(this.urlid, {
+                width: width,
+                height: height,
+                duration: duration
+            });
+        }
+
+        sequence.on('progress', function(res) {
             console.log(res.progress);
 
             this.updateProgress('Rendering ' + res.progress + '%');
@@ -83,7 +94,7 @@ var GeneratorView = Backbone.View.extend({
             }
 
         }.bind(this));
-        skfbgif.start();
+        sequence.start();
     },
 
     showProgress: function() {
@@ -104,13 +115,23 @@ var GeneratorView = Backbone.View.extend({
     },
 
     onGenerateEnd: function(url) {
+        var format = this.$el.find('select[name="format"]').val();
+
         this.hideProgress();
         this.showSharing();
-        this.$el.find('.viewer .preview').html('<img src="' + url + '">');
+        console.log(url);
+
+        if (format === 'gif') {
+            this.$el.find('.viewer .preview').html('<img src="' + url + '">');
+            this.$el.find('.save').attr('href', url);
+            this.$el.find('.save').attr('download', this.model.name);
+        } else if (format === 'webm') {
+            this.$el.find('.viewer .preview').html('<video src="' + url + '" autoplay loop>');
+            this.$el.find('.save').attr('href', url);
+            this.$el.find('.save').attr('download', this.model.name + '.webm');
+        }
         this.enableTools();
 
-        this.$el.find('.save').attr('href', url);
-        this.$el.find('.save').attr('download', this.model.name);
     },
 
     enableTools: function() {
