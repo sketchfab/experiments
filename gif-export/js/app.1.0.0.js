@@ -17873,8 +17873,8 @@ module.exports = Animations;
 },{"bezier-easing":2}],11:[function(require,module,exports){
 'use strict';
 
-var SketchfabGifAnimations = require('./libs/animations');
-//var Sketchfab = window.Sketchfab;
+var Animations = require('./libs/animations');
+var Sketchfab = window.Sketchfab;
 
 var FPS = 15;
 var DELAY = 1 / FPS;
@@ -17884,7 +17884,7 @@ function isFunction(functionToCheck) {
     return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 }
 
-function SketchfabGif(urlid, options) {
+function ImageSequence(urlid, options) {
     this.urlid = urlid;
     this.id = 'skfb2gif' + (+new Date());
     this.images = [];
@@ -17892,11 +17892,14 @@ function SketchfabGif(urlid, options) {
     this.progressValue = 0;
 
     var duration = options.duration || 5;
+    var format = options.format || 'image/png';
+
     this.options = {
         width: options.width || 320,
         height: options.height || 240,
         duration: duration,
         steps: duration * FPS,
+        format: format
     };
 
     if (options.callback && isFunction(options.callback)) {
@@ -17904,32 +17907,33 @@ function SketchfabGif(urlid, options) {
     }
 }
 
-SketchfabGif.prototype.start = function() {
+ImageSequence.prototype.start = function start() {
     var document = window.document;
     this.iframe = document.createElement('iframe');
     this.iframe.id = this.id;
     this.iframe.style.opacity = 0;
     this.iframe.style.position = 'absolute';
+    this.iframe.style.top = '0px';
     this.iframe.style.pointerEvents = 'none';
     document.body.appendChild(this.iframe);
 
     this.initialize(this.iframe, this.urlid);
-}
+};
 
-SketchfabGif.prototype.cleanup = function() {
+ImageSequence.prototype.cleanup = function cleanup() {
+    var document = window.document;
     document.body.removeChild(this.iframe);
 };
 
-SketchfabGif.prototype.on = function(name, handler) {
+ImageSequence.prototype.on = function on(name, handler) {
     this.events[name] = handler;
 };
 
-SketchfabGif.prototype.progress = function(value, message) {
+ImageSequence.prototype.progress = function progress(value, message) {
     if (value >= this.progressValue) {
         this.progressValue = value;
-        // console.info(value, message);
-        if (this.events['progress'] && isFunction(this.events['progress'])) {
-            this.events['progress'].call(window, {
+        if (this.events.progress && isFunction(this.events.progress)) {
+            this.events.progress.call(window, {
                 progress: value,
                 data: message
             });
@@ -17937,7 +17941,7 @@ SketchfabGif.prototype.progress = function(value, message) {
     }
 };
 
-SketchfabGif.prototype.initialize = function(iframe, urlid) {
+ImageSequence.prototype.initialize = function initialize(iframe, urlid) {
     var version = '1.0.0';
     var client = new Sketchfab(version, iframe);
     var self = this;
@@ -17945,7 +17949,7 @@ SketchfabGif.prototype.initialize = function(iframe, urlid) {
     client.init(urlid, {
         preload: 1,
         camera: 0,
-        // overrideDevicePixelRatio: 1,
+        overrideDevicePixelRatio: 1,
         success: function(api) {
             api.start(function() {
                 api.addEventListener('viewerready', function() {
@@ -17953,7 +17957,12 @@ SketchfabGif.prototype.initialize = function(iframe, urlid) {
                         self.progress(1, 'Ready');
                         self.capture(api, self.options.steps, function() {
                             api.stop();
-                            self.buildGif();
+                            self.progress(100, 'Finished');
+                            self.cleanup();
+
+                            if (self.clbk && isFunction(self.clbk)) {
+                                self.clbk.call(window, this.images);
+                            }
                         });
                     }, 1000);
                 });
@@ -17963,7 +17972,7 @@ SketchfabGif.prototype.initialize = function(iframe, urlid) {
     });
 };
 
-SketchfabGif.prototype.capture = function(api, nb, callback) {
+ImageSequence.prototype.capture = function capture(api, nb, callback) {
 
     var self = this;
 
@@ -17975,6 +17984,7 @@ SketchfabGif.prototype.capture = function(api, nb, callback) {
         var current = Math.floor((self.options.steps - i) * range / self.options.steps);
         self.progress(current, 'Frame ' + (self.options.steps - i) + '/' + self.options.steps);
 
+        // End of recursion
         if (i === -1) {
             if (callback) {
                 callback.call(self);
@@ -17985,27 +17995,26 @@ SketchfabGif.prototype.capture = function(api, nb, callback) {
         api.getCameraLookAt(function(err, camera) {
 
             // Camera animation is given by custom function
-            var newCamera = SketchfabGifAnimations.turntable( camera, nb - i, nb);
+            var newCamera = Animations.turntable(camera, nb - i, nb);
 
             api.lookat(
                 newCamera.position,
                 newCamera.target,
                 0
             );
-            setTimeout(function() {
-                api.getScreenShot(self.options.height * (self.options.width / self.options.height), self.options.width * (self.options.width / self.options.height), 'image/png', function(err, result) {
+
+            // Callback of lookat seems to act weird. Using setTimeout instead.
+            setTimeout(function onLookAtFinished() {
+                var w = self.options.height * (self.options.width / self.options.height);
+                var h = self.options.width * (self.options.width / self.options.height);
+                api.getScreenShot(w, h, self.options.format, function(err, b64image) {
                     if (err) {
                         return;
                     }
-                    var image = new Image();
-                    image.src = result;
-                    self.images.push(image);
-                });
-                setTimeout(function(){
+                    self.images.push(b64image);
                     _capture(i - 1);
-                }, 100);
-            }, 30);
-
+                });
+            }, 50);
         });
     }
 
@@ -18013,34 +18022,7 @@ SketchfabGif.prototype.capture = function(api, nb, callback) {
 
 };
 
-SketchfabGif.prototype.buildGif = function() {
-    var self = this;
-    this.progress(99, 'Encoding ' + this.images.length + ' frames');
-    var gif = new GIF({
-        workers: 2,
-        quality: 5,
-        width: this.images[this.images.length - 1].width,
-        height: this.images[this.images.length - 1].height
-    });
-    for (var j = 0; j < this.images.length; j++) {
-        gif.addFrame(this.images[j], {
-            delay: DELAY
-        });
-    }
-    gif.on('finished', function(blob) {
-
-        self.progress(100, blob);
-
-        self.cleanup();
-
-        if (self.clbk && isFunction(self.clbk)) {
-            self.clbk.call(window);
-        }
-    });
-    gif.render();
-};
-
-module.exports = SketchfabGif;
+module.exports = ImageSequence;
 
 },{"./libs/animations":10}],12:[function(require,module,exports){
 var Promise = require("bluebird");
@@ -18577,7 +18559,7 @@ var _ = require('underscore');
 var Backbone = require('backbone');
 
 var SketchfabSDK = require('../vendors/sketchfab-sdk/Sketchfab');
-var SketchfabGif = require('../vendors/sketchfab-gif/sketchfab-gif');
+var SketchfabImageSequence = require('../vendors/sketchfab-image-sequence/sketchfab-image-sequence');
 
 var tplModelInfo = _.template(require('./GeneratorModelInfo.tpl'));
 
@@ -18632,6 +18614,7 @@ var GeneratorView = Backbone.View.extend({
         var width = parseInt(this.$el.find('input[name="width"]').val(), 10);
         var height = parseInt(this.$el.find('input[name="height"]').val(), 10);
         var duration = parseInt(this.$el.find('select[name="duration"]').val(), 10);
+        var format = this.$el.find('select[name="format"]').val();
 
         this.$el.find('.viewer .preview').empty();
 
@@ -18639,23 +18622,56 @@ var GeneratorView = Backbone.View.extend({
         this.showProgress();
         this.updateProgress('Loading model...');
 
-        var skfbgif = new SketchfabGif(this.urlid, {
-            width: width,
-            height: height,
-            duration: duration
-        });
-        skfbgif.on('progress', function(res) {
-            console.log(res.progress);
+        if (format === 'gif') {
+            var sequence = new SketchfabImageSequence(this.urlid, {
+                width: width,
+                height: height,
+                duration: duration,
+                callback: function(images) {
+                    this.updateProgress('Encoding GIF...');
+                    var gif = new GIF({
+                        workers: 2,
+                        quality: 5,
+                        width: width,
+                        height: height
+                    });
+                    var image;
+                    for (var j = 0; j < images.length; j++) {
+                        image = new Image();
+                        image.src = images[j];
+                        //@TODO: image loading isn't guaranteed to be finished when added
+                        gif.addFrame(image, {
+                            delay: 1 / 15
+                        });
+                    }
+                    gif.on('finished', function(blob) {
+                        var url = URL.createObjectURL(blob);
+                        this.onGenerateEnd(url);
+                    }.bind(this));
+                    gif.render();
+                }.bind(this)
+            });
+        } else if (format === 'webm') {
+            var sequence = new SketchfabImageSequence(this.urlid, {
+                width: width,
+                height: height,
+                duration: duration,
+                format: 'image/webp',
+                callback: function(images) {
+                    this.updateProgress('Encoding WebM...');
+                    var blob = Whammy.fromImageArray(images, 15);
+                    var url = URL.createObjectURL(blob);
+                    this.onGenerateEnd(url);
+                }.bind(this)
+            });
+        }
 
+        sequence.on('progress', function(res) {
+            console.log(res.progress, res.data);
             this.updateProgress('Rendering ' + res.progress + '%');
-
-            if (res.progress === 100) {
-                var url = URL.createObjectURL(res.data);
-                this.onGenerateEnd(url);
-            }
-
         }.bind(this));
-        skfbgif.start();
+
+        sequence.start();
     },
 
     showProgress: function() {
@@ -18676,13 +18692,23 @@ var GeneratorView = Backbone.View.extend({
     },
 
     onGenerateEnd: function(url) {
+        var format = this.$el.find('select[name="format"]').val();
+
         this.hideProgress();
         this.showSharing();
-        this.$el.find('.viewer .preview').html('<img src="' + url + '">');
+        console.log(url);
+
+        if (format === 'gif') {
+            this.$el.find('.viewer .preview').html('<img src="' + url + '">');
+            this.$el.find('.save').attr('href', url);
+            this.$el.find('.save').attr('download', this.model.name);
+        } else if (format === 'webm') {
+            this.$el.find('.viewer .preview').html('<video src="' + url + '" autoplay loop>');
+            this.$el.find('.save').attr('href', url);
+            this.$el.find('.save').attr('download', this.model.name + '.webm');
+        }
         this.enableTools();
 
-        this.$el.find('.save').attr('href', url);
-        this.$el.find('.save').attr('download', this.model.name);
     },
 
     enableTools: function() {
@@ -18698,7 +18724,7 @@ var GeneratorView = Backbone.View.extend({
 
 module.exports = GeneratorView;
 
-},{"../vendors/sketchfab-gif/sketchfab-gif":11,"../vendors/sketchfab-sdk/Sketchfab":12,"./GeneratorModelInfo.tpl":21,"backbone":1,"jquery":5,"underscore":6}],21:[function(require,module,exports){
+},{"../vendors/sketchfab-image-sequence/sketchfab-image-sequence":11,"../vendors/sketchfab-sdk/Sketchfab":12,"./GeneratorModelInfo.tpl":21,"backbone":1,"jquery":5,"underscore":6}],21:[function(require,module,exports){
 module.exports = "<a href=\"<%= model.viewerUrl %>\" target=\"_blank\">\n    <img src=\"<%= thumbnail %>\" alt=\"\">\n</a>\n<div class=\"model-credits\">\n    <a href=\"<%= model.viewerUrl %>\" target=\"_blank\" class=\"name\"><%= model.name %></a>\n    by <span class=\"author\"><%= model.user.displayName %></span>\n</div>\n";
 
 },{}],22:[function(require,module,exports){
