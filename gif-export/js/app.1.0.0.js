@@ -17915,6 +17915,8 @@ ImageSequence.prototype.start = function start() {
     this.iframe.style.position = 'absolute';
     this.iframe.style.top = '0px';
     this.iframe.style.pointerEvents = 'none';
+    this.iframe.width = this.options.width;
+    this.iframe.height = this.options.height;
     document.body.appendChild(this.iframe);
 
     this.initialize(this.iframe, this.urlid);
