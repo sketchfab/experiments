@@ -5,8 +5,7 @@ var _ = require('underscore');
 var Backbone = require('backbone');
 
 var SketchfabSDK = require('../vendors/sketchfab-sdk/Sketchfab');
-var SketchfabGif = require('../vendors/sketchfab-gif/sketchfab-gif');
-var SketchfabWebm = require('../vendors/sketchfab-webm');
+var SketchfabImageSequence = require('../vendors/sketchfab-image-sequence/sketchfab-image-sequence');
 
 var tplModelInfo = _.template(require('./GeneratorModelInfo.tpl'));
 
@@ -70,30 +69,54 @@ var GeneratorView = Backbone.View.extend({
         this.updateProgress('Loading model...');
 
         if (format === 'gif') {
-            var sequence = new SketchfabGif(this.urlid, {
+            var sequence = new SketchfabImageSequence(this.urlid, {
                 width: width,
                 height: height,
-                duration: duration
+                duration: duration,
+                callback: function(images) {
+                    this.updateProgress('Encoding GIF...');
+                    var gif = new GIF({
+                        workers: 2,
+                        quality: 5,
+                        width: width,
+                        height: height
+                    });
+                    var image;
+                    for (var j = 0; j < images.length; j++) {
+                        image = new Image();
+                        image.src = images[j];
+                        //@TODO: image loading isn't guaranteed to be finished when added
+                        gif.addFrame(image, {
+                            delay: 1 / 15
+                        });
+                    }
+                    gif.on('finished', function(blob) {
+                        var url = URL.createObjectURL(blob);
+                        this.onGenerateEnd(url);
+                    }.bind(this));
+                    gif.render();
+                }.bind(this)
             });
         } else if (format === 'webm') {
-            var sequence = new SketchfabWebm(this.urlid, {
+            var sequence = new SketchfabImageSequence(this.urlid, {
                 width: width,
                 height: height,
-                duration: duration
+                duration: duration,
+                format: 'image/webp',
+                callback: function(images) {
+                    this.updateProgress('Encoding WebM...');
+                    var blob = Whammy.fromImageArray(images, 15);
+                    var url = URL.createObjectURL(blob);
+                    this.onGenerateEnd(url);
+                }.bind(this)
             });
         }
 
         sequence.on('progress', function(res) {
-            console.log(res.progress);
-
+            console.log(res.progress, res.data);
             this.updateProgress('Rendering ' + res.progress + '%');
-
-            if (res.progress === 100) {
-                var url = URL.createObjectURL(res.data);
-                this.onGenerateEnd(url);
-            }
-
         }.bind(this));
+
         sequence.start();
     },
 
