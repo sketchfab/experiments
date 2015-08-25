@@ -17,18 +17,18 @@ var AppView = Backbone.View.extend({
         this.initViewer(this.viewerReady.bind(this));
 
         var current = new Backbone.Model();
-        current.on('change', function(){
+        current.on('change', function(model) {
             var current = '#annotation-' + (1 + parseInt(this.get('order'), 10));
-            console.log(current);
             $('.slide').removeClass('active');
             $(current).addClass('active');
         });
 
         this.listenTo(this, 'idle', function(e) {
             if (e === true && this._annotations) {
-                _.each(this._annotations, function(annotation) {
+                _.each(this._annotations, function(annotation, i) {
                     var distance = this.annotationDistance(annotation);
                     if (distance === 0) {
+                        annotation.order = i;
                         current.set(annotation);
                     }
                 }.bind(this));
