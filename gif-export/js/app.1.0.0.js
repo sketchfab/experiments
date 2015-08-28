@@ -17795,7 +17795,7 @@ var router = new Router({
 });
 Backbone.history.start();
 
-},{"./Router":7,"./views/App":19,"backbone":1,"jquery":5,"underscore":6}],9:[function(require,module,exports){
+},{"./Router":7,"./views/App":21,"backbone":1,"jquery":5,"underscore":6}],9:[function(require,module,exports){
 module.exports = function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -17804,6 +17804,42 @@ module.exports = function getParameterByName(name) {
 }
 
 },{}],10:[function(require,module,exports){
+var giphyUpload = function(blob, model, callback) {
+
+    callback('Not implemented', null);
+    return;
+
+};
+
+module.exports = giphyUpload;
+
+},{}],11:[function(require,module,exports){
+var imgurUpload = function(blob, model, callback) {
+
+    var fd = new FormData();
+
+    fd.append('image', blob, '3d-sketchfab-model.gif');
+
+    fd.append('title', model.name);
+    fd.append('description', model.viewerUrl);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.imgur.com/3/image');
+    xhr.setRequestHeader('Authorization', 'Client-ID 0c3e658c3d61441');
+    xhr.onload = function() {
+        var response = JSON.parse(xhr.responseText);
+        console.log(response);
+        if (response.status === 200) {
+            callback(null, response.data);
+        }
+    };
+    xhr.send(fd);
+
+};
+
+module.exports = imgurUpload;
+
+},{}],12:[function(require,module,exports){
 'use strict';
 
 var BezierEasing = require('bezier-easing');
@@ -17870,7 +17906,7 @@ var Animations = {
 
 module.exports = Animations;
 
-},{"bezier-easing":2}],11:[function(require,module,exports){
+},{"bezier-easing":2}],13:[function(require,module,exports){
 'use strict';
 
 var Animations = require('./libs/animations');
@@ -18026,7 +18062,7 @@ ImageSequence.prototype.capture = function capture(api, nb, callback) {
 
 module.exports = ImageSequence;
 
-},{"./libs/animations":10}],12:[function(require,module,exports){
+},{"./libs/animations":12}],14:[function(require,module,exports){
 var Promise = require("bluebird");
 
 var Categories = require('./libs/Categories');
@@ -18123,7 +18159,7 @@ Sketchfab.Users = Users;
 
 module.exports = Sketchfab;
 
-},{"./libs/Categories":15,"./libs/Model":16,"./libs/Models":17,"./libs/Users":18,"bluebird":3}],13:[function(require,module,exports){
+},{"./libs/Categories":17,"./libs/Model":18,"./libs/Models":19,"./libs/Users":20,"bluebird":3}],15:[function(require,module,exports){
 var CONFIG = {
     BASE_API_URL: 'https://api.sketchfab.com',
     BASE_SERVER_URL: 'https://sketchfab.com',
@@ -18139,7 +18175,7 @@ var CONFIG = {
 
 module.exports = CONFIG;
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -18173,7 +18209,7 @@ var API = {
 
 module.exports = API;
 
-},{"../config":13,"jquery":5,"underscore":6}],15:[function(require,module,exports){
+},{"../config":15,"jquery":5,"underscore":6}],17:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -18197,7 +18233,7 @@ Sketchfab.Categories = {
 
 module.exports = Sketchfab.Categories;
 
-},{"../config":13,"./API":14,"underscore":6}],16:[function(require,module,exports){
+},{"../config":15,"./API":16,"underscore":6}],18:[function(require,module,exports){
 'use strict';
 
 var API = require('./API');
@@ -18255,7 +18291,7 @@ Sketchfab.Model = {
 
 module.exports = Sketchfab.Model;
 
-},{"../config":13,"./API":14}],17:[function(require,module,exports){
+},{"../config":15,"./API":16}],19:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -18402,7 +18438,7 @@ Sketchfab.Models = {
 
 module.exports = Sketchfab.Models;
 
-},{"../config":13,"./API":14,"underscore":6}],18:[function(require,module,exports){
+},{"../config":15,"./API":16,"underscore":6}],20:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -18506,7 +18542,7 @@ Sketchfab.Users = {
 
 module.exports = Sketchfab.Users;
 
-},{"../config":13,"./API":14,"underscore":6}],19:[function(require,module,exports){
+},{"../config":15,"./API":16,"underscore":6}],21:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -18553,12 +18589,14 @@ var AppView = Backbone.View.extend({
 
 module.exports = AppView;
 
-},{"../utils/getParameterByName":9,"./Generator":20,"./Search":22,"backbone":1,"jquery":5,"underscore":6}],20:[function(require,module,exports){
+},{"../utils/getParameterByName":9,"./Generator":22,"./Search":24,"backbone":1,"jquery":5,"underscore":6}],22:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
 var _ = require('underscore');
 var Backbone = require('backbone');
+var giphyUpload = require('../utils/giphy.js');
+var imgurUpload = require('../utils/imgur.js');
 
 var SketchfabSDK = require('../vendors/sketchfab-sdk/Sketchfab');
 var SketchfabImageSequence = require('../vendors/sketchfab-image-sequence/sketchfab-image-sequence');
@@ -18568,12 +18606,15 @@ var tplModelInfo = _.template(require('./GeneratorModelInfo.tpl'));
 var GeneratorView = Backbone.View.extend({
 
     events: {
-        'submit': 'generate'
+        'submit': 'generate',
+        'click [data-action="imgur"]': 'uploadImgur',
+        'click [data-action="giphy"]': 'uploadGiphy'
     },
 
     initialize: function() {
         this.api = null;
         this.client = null;
+        this.blob = null;
     },
 
     loadModel: function(urlid) {
@@ -18610,6 +18651,8 @@ var GeneratorView = Backbone.View.extend({
         if (!this.urlid) {
             return;
         }
+
+        this.blob = null;
 
         this.disableTools();
 
@@ -18648,7 +18691,7 @@ var GeneratorView = Backbone.View.extend({
                     }
                     gif.on('finished', function(blob) {
                         var url = URL.createObjectURL(blob);
-                        this.onGenerateEnd(url);
+                        this.onGenerateEnd(url, blob);
                     }.bind(this));
                     gif.render();
                 }.bind(this)
@@ -18663,7 +18706,7 @@ var GeneratorView = Backbone.View.extend({
                     this.updateProgress('Encoding WebM...');
                     var blob = Whammy.fromImageArray(images, 15);
                     var url = URL.createObjectURL(blob);
-                    this.onGenerateEnd(url);
+                    this.onGenerateEnd(url, blob);
                 }.bind(this)
             });
         }
@@ -18693,12 +18736,15 @@ var GeneratorView = Backbone.View.extend({
         this.$el.find('.share').removeClass('active');
     },
 
-    onGenerateEnd: function(url) {
+    onGenerateEnd: function(url, blob) {
+
+        console.log(url);
+        this.blob = blob;
+
         var format = this.$el.find('select[name="format"]').val();
 
         this.hideProgress();
         this.showSharing();
-        console.log(url);
 
         if (format === 'gif') {
             this.$el.find('.viewer .preview').html('<img src="' + url + '">');
@@ -18721,15 +18767,63 @@ var GeneratorView = Backbone.View.extend({
     disableTools: function() {
         this.$el.find('.tools').removeClass('active');
         this.$el.find('.btn-primary').attr('disabled', 'disabled');
+    },
+
+    uploadImgur: function(e) {
+        e.preventDefault();
+        if (!this.blob) {
+            return;
+        }
+
+        var originalLabel = '';
+        var button = this.$el.find('button[data-action="imgur"]');
+        originalLabel = button.text();
+        button.prop('disabled', true);
+        button.text('Uploading...');
+
+        imgurUpload(this.blob, this.model, function(err, data) {
+
+            button.prop('disabled', false);
+            button.text(originalLabel);
+
+            if (!err) {
+                window.open('http://imgur.com/' + data.id);
+            }
+        });
+    },
+
+    uploadGiphy: function(e) {
+        e.preventDefault();
+        if (!this.blob) {
+            return;
+        }
+
+        var originalLabel = '';
+        var button = this.$el.find('button[data-action="giphy"]');
+        originalLabel = button.text();
+        button.prop('disabled', true);
+        button.text('Uploading...');
+
+        giphyUpload(this.blob, this.model, function(err, data) {
+
+            button.prop('disabled', false);
+            button.text(originalLabel);
+
+            if (!err) {
+                console.log(data);
+            } else {
+                console.error(err);
+            }
+        });
     }
 });
 
 module.exports = GeneratorView;
 
-},{"../vendors/sketchfab-image-sequence/sketchfab-image-sequence":11,"../vendors/sketchfab-sdk/Sketchfab":12,"./GeneratorModelInfo.tpl":21,"backbone":1,"jquery":5,"underscore":6}],21:[function(require,module,exports){
+},{"../utils/giphy.js":10,"../utils/imgur.js":11,"../vendors/sketchfab-image-sequence/sketchfab-image-sequence":13,"../vendors/sketchfab-sdk/Sketchfab":14,"./GeneratorModelInfo.tpl":23,"backbone":1,"jquery":5,"underscore":6}],23:[function(require,module,exports){
 module.exports = "<a href=\"<%= model.viewerUrl %>\" target=\"_blank\">\n    <img src=\"<%= thumbnail %>\" alt=\"\">\n</a>\n<div class=\"model-credits\">\n    <a href=\"<%= model.viewerUrl %>\" target=\"_blank\" class=\"name\"><%= model.name %></a>\n    by <span class=\"author\"><%= model.user.displayName %></span>\n</div>\n";
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -18876,7 +18970,7 @@ var SearchView = Backbone.View.extend({
 
 module.exports = SearchView;
 
-},{"../vendors/sketchfab-sdk/Sketchfab":12,"./Search.tpl":23,"backbone":1,"jquery":5,"underscore":6}],23:[function(require,module,exports){
+},{"../vendors/sketchfab-sdk/Sketchfab":14,"./Search.tpl":25,"backbone":1,"jquery":5,"underscore":6}],25:[function(require,module,exports){
 module.exports = "<ul>\n    <% for(var i=0,l=models.length; i<l; i++) { %>\n        <li class=\"results-item\" data-id=\"<%= models[i].urlid %>\">\n            <a href=\"#model/<%= models[i].urlid %>\">\n                <img src=\"<%= models[i].thumbnailUrl %>\" alt=\"\" width=\"100\" height=\"100\">\n            </a>\n        </li>\n    <% } %>\n<ul>\n";
 
 },{}]},{},[8]);

@@ -3,6 +3,8 @@
 var $ = require('jquery');
 var _ = require('underscore');
 var Backbone = require('backbone');
+var giphyUpload = require('../utils/giphy.js');
+var imgurUpload = require('../utils/imgur.js');
 
 var SketchfabSDK = require('../vendors/sketchfab-sdk/Sketchfab');
 var SketchfabImageSequence = require('../vendors/sketchfab-image-sequence/sketchfab-image-sequence');
@@ -12,12 +14,15 @@ var tplModelInfo = _.template(require('./GeneratorModelInfo.tpl'));
 var GeneratorView = Backbone.View.extend({
 
     events: {
-        'submit': 'generate'
+        'submit': 'generate',
+        'click [data-action="imgur"]': 'uploadImgur',
+        'click [data-action="giphy"]': 'uploadGiphy'
     },
 
     initialize: function() {
         this.api = null;
         this.client = null;
+        this.blob = null;
     },
 
     loadModel: function(urlid) {
@@ -54,6 +59,8 @@ var GeneratorView = Backbone.View.extend({
         if (!this.urlid) {
             return;
         }
+
+        this.blob = null;
 
         this.disableTools();
 
@@ -92,7 +99,7 @@ var GeneratorView = Backbone.View.extend({
                     }
                     gif.on('finished', function(blob) {
                         var url = URL.createObjectURL(blob);
-                        this.onGenerateEnd(url);
+                        this.onGenerateEnd(url, blob);
                     }.bind(this));
                     gif.render();
                 }.bind(this)
@@ -107,7 +114,7 @@ var GeneratorView = Backbone.View.extend({
                     this.updateProgress('Encoding WebM...');
                     var blob = Whammy.fromImageArray(images, 15);
                     var url = URL.createObjectURL(blob);
-                    this.onGenerateEnd(url);
+                    this.onGenerateEnd(url, blob);
                 }.bind(this)
             });
         }
@@ -137,12 +144,15 @@ var GeneratorView = Backbone.View.extend({
         this.$el.find('.share').removeClass('active');
     },
 
-    onGenerateEnd: function(url) {
+    onGenerateEnd: function(url, blob) {
+
+        console.log(url);
+        this.blob = blob;
+
         var format = this.$el.find('select[name="format"]').val();
 
         this.hideProgress();
         this.showSharing();
-        console.log(url);
 
         if (format === 'gif') {
             this.$el.find('.viewer .preview').html('<img src="' + url + '">');
@@ -165,6 +175,54 @@ var GeneratorView = Backbone.View.extend({
     disableTools: function() {
         this.$el.find('.tools').removeClass('active');
         this.$el.find('.btn-primary').attr('disabled', 'disabled');
+    },
+
+    uploadImgur: function(e) {
+        e.preventDefault();
+        if (!this.blob) {
+            return;
+        }
+
+        var originalLabel = '';
+        var button = this.$el.find('button[data-action="imgur"]');
+        originalLabel = button.text();
+        button.prop('disabled', true);
+        button.text('Uploading...');
+
+        imgurUpload(this.blob, this.model, function(err, data) {
+
+            button.prop('disabled', false);
+            button.text(originalLabel);
+
+            if (!err) {
+                window.open('http://imgur.com/' + data.id);
+            }
+        });
+    },
+
+    uploadGiphy: function(e) {
+        e.preventDefault();
+        if (!this.blob) {
+            return;
+        }
+
+        var originalLabel = '';
+        var button = this.$el.find('button[data-action="giphy"]');
+        originalLabel = button.text();
+        button.prop('disabled', true);
+        button.text('Uploading...');
+
+        giphyUpload(this.blob, this.model, function(err, data) {
+
+            button.prop('disabled', false);
+            button.text(originalLabel);
+
+            if (!err) {
+                console.log(data);
+            } else {
+                console.error(err);
+            }
+        });
     }
 });
 
