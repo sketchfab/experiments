@@ -23,6 +23,18 @@ var GeneratorView = Backbone.View.extend({
         this.api = null;
         this.client = null;
         this.blob = null;
+        this.config = {};
+
+        // Fetch config from Google Spreadsheet
+        $.ajax({
+            'url': 'https://spreadsheets.google.com/feeds/list/1M62DAoWPOB7qJH-uaQacHzkz4wiEiThSD5LUvZVezaE/od6/public/values?alt=json'
+        }).then(function(response) {
+            var cell = response.feed.entry[0].content['$t'];
+            this.config.giphy = {
+                'api_key': cell.replace('value: ', '')
+            }
+            console.log(this.config);
+        }.bind(this));
     },
 
     loadModel: function(urlid) {
@@ -212,13 +224,28 @@ var GeneratorView = Backbone.View.extend({
         button.prop('disabled', true);
         button.text('Uploading...');
 
-        giphyUpload(this.blob, this.model, function(err, data) {
+        if (!this.config.giphy) {
+            alert('Error. Giphy config is missing');
+            return;
+        }
+
+        var api_key = this.config.giphy.api_key;
+
+        giphyUpload(this.blob, this.model, api_key, function(err, data) {
 
             button.prop('disabled', false);
             button.text(originalLabel);
 
             if (!err) {
-                console.log(data);
+                button.prop('disabled', false);
+                button.text(originalLabel);
+
+                $.ajax({
+                    'url': 'http://api.giphy.com/v1/gifs/' + data.id + '?api_key=' + api_key,
+                }).then(function(response) {
+                    window.open(response.data.url);
+                });
+
             } else {
                 console.error(err);
             }
