@@ -17804,10 +17804,26 @@ module.exports = function getParameterByName(name) {
 }
 
 },{}],10:[function(require,module,exports){
-var giphyUpload = function(blob, model, callback) {
+var giphyUpload = function(blob, model, api_key, callback) {
 
-    callback('Not implemented', null);
-    return;
+    var fd = new FormData();
+
+    fd.append('file', blob, '3d-sketchfab-model.gif');
+    fd.append('username', 'sketchfab');
+    fd.append('api_key', api_key);
+    fd.append('tags', 'sketchfab,3D');
+    fd.append('source_post_url', model.viewerUrl);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://upload.giphy.com/v1/gifs");
+    xhr.onload = function() {
+        var response = JSON.parse(xhr.responseText);
+        console.log(response);
+        if (response.meta.status === 200) {
+            callback(null, response.data);
+        }
+    };
+    xhr.send(fd);
 
 };
 
@@ -18615,6 +18631,18 @@ var GeneratorView = Backbone.View.extend({
         this.api = null;
         this.client = null;
         this.blob = null;
+        this.config = {};
+
+        // Fetch config from Google Spreadsheet
+        $.ajax({
+            'url': 'https://spreadsheets.google.com/feeds/list/1M62DAoWPOB7qJH-uaQacHzkz4wiEiThSD5LUvZVezaE/od6/public/values?alt=json'
+        }).then(function(response) {
+            var cell = response.feed.entry[0].content['$t'];
+            this.config.giphy = {
+                'api_key': cell.replace('value: ', '')
+            }
+            console.log(this.config);
+        }.bind(this));
     },
 
     loadModel: function(urlid) {
@@ -18804,13 +18832,28 @@ var GeneratorView = Backbone.View.extend({
         button.prop('disabled', true);
         button.text('Uploading...');
 
-        giphyUpload(this.blob, this.model, function(err, data) {
+        if (!this.config.giphy) {
+            alert('Error. Giphy config is missing');
+            return;
+        }
+
+        var api_key = this.config.giphy.api_key;
+
+        giphyUpload(this.blob, this.model, api_key, function(err, data) {
 
             button.prop('disabled', false);
             button.text(originalLabel);
 
             if (!err) {
-                console.log(data);
+                button.prop('disabled', false);
+                button.text(originalLabel);
+
+                $.ajax({
+                    'url': 'http://api.giphy.com/v1/gifs/' + data.id + '?api_key=' + api_key,
+                }).then(function(response) {
+                    window.open(response.data.url);
+                });
+
             } else {
                 console.error(err);
             }
