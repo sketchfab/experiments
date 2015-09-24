@@ -79,6 +79,7 @@ ImageSequence.prototype.initialize = function initialize(iframe, urlid) {
         preload: 1,
         camera: 0,
         overrideDevicePixelRatio: 1,
+        animation_autoplay: 0,
         success: function(api) {
             api.start(function() {
                 api.addEventListener('viewerready', function() {
