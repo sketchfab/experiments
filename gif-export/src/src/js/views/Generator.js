@@ -33,7 +33,6 @@ var GeneratorView = Backbone.View.extend({
             this.config.giphy = {
                 'api_key': cell.replace('value: ', '')
             }
-            console.log(this.config);
         }.bind(this));
     },
 
