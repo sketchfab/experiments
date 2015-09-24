@@ -37,7 +37,7 @@ var GeneratorView = Backbone.View.extend({
         }.bind(this));
     },
 
-    loadModel: function(urlid) {
+    loadModel: function(urlid, options) {
         this.urlid = urlid;
 
         SketchfabSDK.Model.byId(this.urlid).then(
@@ -45,6 +45,10 @@ var GeneratorView = Backbone.View.extend({
                 this.model = response;
                 this.enableTools();
                 this.render();
+
+                if (options && options.autostart) {
+                    this.generate();
+                }
             }.bind(this),
             function() {
                 console.log('Error');
@@ -66,7 +70,10 @@ var GeneratorView = Backbone.View.extend({
     },
 
     generate: function(e) {
-        e.preventDefault();
+
+        if (e) {
+            e.preventDefault();
+        }
 
         if (!this.urlid) {
             return;

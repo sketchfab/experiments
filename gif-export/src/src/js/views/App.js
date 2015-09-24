@@ -36,8 +36,8 @@ var AppView = Backbone.View.extend({
         // this.goToView();
     },
 
-    goToGenerator: function(urlid) {
-        this.generatorView.loadModel(urlid);
+    goToGenerator: function(urlid, options) {
+        this.generatorView.loadModel(urlid, options);
     }
 
 });

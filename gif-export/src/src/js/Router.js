@@ -1,6 +1,8 @@
 'use strict';
 
+var _ = require("underscore");
 var Backbone = require("backbone");
+var parseQueryString = require('./utils/parseQueryString');
 
 var Router = Backbone.Router.extend({
     routes: {
@@ -16,8 +18,17 @@ var Router = Backbone.Router.extend({
         this.appView.goToSearch();
     },
 
-    generator: function(urlid) {
-        this.appView.goToGenerator(urlid);
+    generator: function(urlid, qs) {
+        var params = {};
+        if (qs) {
+            params = _.defaults(parseQueryString(qs), {
+                autostart: '0'
+            });
+        }
+
+        this.appView.goToGenerator(urlid, {
+            autostart: params.autostart === '1'
+        });
     }
 });
 
