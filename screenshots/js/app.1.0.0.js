@@ -12694,7 +12694,9 @@ var AppView = Backbone.View.extend({
     events: {
         'submit .form-load': 'onLoadModelClick',
         'submit .form-options': 'onTakeScreenshotClick',
-        'click [data-action="setCamera"]': 'setCamera'
+        'click [data-action="setCamera"]': 'setCamera',
+        'click [data-action="exportCamera"]': 'onExportCameraClick',
+        'click [data-action="importCamera"]': 'onImportCameraClick'
     },
 
     initialize: function() {
@@ -12707,13 +12709,15 @@ var AppView = Backbone.View.extend({
     onLoadModelClick: function(e) {
         e.preventDefault();
         var urlid = $.trim(this.$el.find('input[name="urlid"]').val());
-        this.initViewer(urlid);
+        var transparent = this.$el.find('input[name="transparent"]').is(':checked');
+        this.initViewer(urlid, transparent);
     },
 
-    initViewer: function(urlid) {
+    initViewer: function(urlid, transparent) {
         this.client.init(urlid, {
             overrideDevicePixelRatio: 1,
             camera: 0,
+            transparent: transparent ? 1 : 0,
             success: function onSuccess(api) {
                 this.api = api;
                 api.start();
@@ -12840,6 +12844,9 @@ var AppView = Backbone.View.extend({
         }
 
         this.api.getCameraLookAt(function(err, camera) {
+
+            this._camera = camera;
+
             this.$cameraPositionX.val(parseFloat(camera.position[0]).toFixed(5));
             this.$cameraPositionY.val(parseFloat(camera.position[1]).toFixed(5));
             this.$cameraPositionZ.val(parseFloat(camera.position[2]).toFixed(5));
@@ -12879,6 +12886,31 @@ var AppView = Backbone.View.extend({
             cameras[angle].target,
             0.1
         );
+    },
+
+    onExportCameraClick: function(e) {
+        e.preventDefault();
+        var win = window.open('', 'camera-export');
+        win.document.write('<pre>' + JSON.stringify(this._camera, null, 4) + '</pre>');
+    },
+
+    onImportCameraClick: function(e) {
+        e.preventDefault();
+        var camera;
+        try {
+            camera = JSON.parse(window.prompt());
+        } catch (e) {
+            alert('Camera is not valid');
+            return;
+        }
+
+        if (camera.position && camera.target) {
+            this.api.setCameraLookAt(
+                camera.position,
+                camera.target,
+                0.1
+            );
+        }
     }
 });
 
