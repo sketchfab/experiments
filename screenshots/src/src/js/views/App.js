@@ -31,13 +31,15 @@ var AppView = Backbone.View.extend({
     onLoadModelClick: function(e) {
         e.preventDefault();
         var urlid = $.trim(this.$el.find('input[name="urlid"]').val());
-        this.initViewer(urlid);
+        var transparent = this.$el.find('input[name="transparent"]').is(':checked');
+        this.initViewer(urlid, transparent);
     },
 
-    initViewer: function(urlid) {
+    initViewer: function(urlid, transparent) {
         this.client.init(urlid, {
             overrideDevicePixelRatio: 1,
             camera: 0,
+            transparent: transparent ? 1 : 0,
             success: function onSuccess(api) {
                 this.api = api;
                 api.start();

@@ -14,12 +14,15 @@
     background: #fff;
     text-align: center;
 }
-    .search input {
+    .search .text {
         width: 30em;
         padding: 4px;
     }
     .search button {
         padding: 4px;
+    }
+    .search label {
+        font-size: 13px;
     }
 
 .main {
