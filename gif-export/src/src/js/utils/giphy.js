@@ -13,7 +13,7 @@ var giphyUpload = function(blob, model, api_key, callback) {
     fd.append('source_post_url', model.viewerUrl);
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://upload.giphy.com/v1/gifs");
+    xhr.open("POST", "https://upload.giphy.com/v1/gifs");
     xhr.onload = function() {
         var response = JSON.parse(xhr.responseText);
         console.log(response);
