@@ -1,6 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
-//     Backbone.js 1.2.3
+//     Backbone.js 1.2.1
 
 //     (c) 2010-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Backbone may be freely distributed under the MIT license.
@@ -43,10 +43,10 @@
   var previousBackbone = root.Backbone;
 
   // Create a local reference to a common array method we'll want to use later.
-  var slice = Array.prototype.slice;
+  var slice = [].slice;
 
   // Current version of the library. Keep in sync with `package.json`.
-  Backbone.VERSION = '1.2.3';
+  Backbone.VERSION = '1.2.1';
 
   // For Backbone's purposes, jQuery, Zepto, Ender, or My Library (kidding) owns
   // the `$` variable.
@@ -70,13 +70,8 @@
   // form param named `model`.
   Backbone.emulateJSON = false;
 
-  // Proxy Backbone class methods to Underscore functions, wrapping the model's
-  // `attributes` object or collection's `models` array behind the scenes.
-  //
-  // collection.filter(function(model) { return model.get('age') > 10 });
-  // collection.each(this.addView);
-  //
-  // `Function#apply` can be slow so we use the method's arg count, if we know it.
+  // Proxy Underscore methods to a Backbone class' prototype using a
+  // particular attribute as the data argument
   var addMethod = function(length, method, attribute) {
     switch (length) {
       case 1: return function() {
@@ -86,10 +81,10 @@
         return _[method](this[attribute], value);
       };
       case 3: return function(iteratee, context) {
-        return _[method](this[attribute], cb(iteratee, this), context);
+        return _[method](this[attribute], iteratee, context);
       };
       case 4: return function(iteratee, defaultVal, context) {
-        return _[method](this[attribute], cb(iteratee, this), defaultVal, context);
+        return _[method](this[attribute], iteratee, defaultVal, context);
       };
       default: return function() {
         var args = slice.call(arguments);
@@ -104,26 +99,12 @@
     });
   };
 
-  // Support `collection.sortBy('attr')` and `collection.findWhere({id: 1})`.
-  var cb = function(iteratee, instance) {
-    if (_.isFunction(iteratee)) return iteratee;
-    if (_.isObject(iteratee) && !instance._isModel(iteratee)) return modelMatcher(iteratee);
-    if (_.isString(iteratee)) return function(model) { return model.get(iteratee); };
-    return iteratee;
-  };
-  var modelMatcher = function(attrs) {
-    var matcher = _.matches(attrs);
-    return function(model) {
-      return matcher(model.attributes);
-    };
-  };
-
   // Backbone.Events
   // ---------------
 
   // A module that can be mixed in to *any object* in order to provide it with
-  // a custom event channel. You may bind a callback to an event with `on` or
-  // remove with `off`; `trigger`-ing an event fires all callbacks in
+  // custom events. You may bind with `on` or remove with `off` callback
+  // functions to an event; `trigger`-ing an event fires all callbacks in
   // succession.
   //
   //     var object = {};
@@ -138,25 +119,26 @@
 
   // Iterates over the standard `event, callback` (as well as the fancy multiple
   // space-separated events `"change blur", callback` and jQuery-style event
-  // maps `{event: callback}`).
-  var eventsApi = function(iteratee, events, name, callback, opts) {
+  // maps `{event: callback}`), reducing them by manipulating `memo`.
+  // Passes a normalized single event name and callback, as well as any
+  // optional `opts`.
+  var eventsApi = function(iteratee, memo, name, callback, opts) {
     var i = 0, names;
     if (name && typeof name === 'object') {
       // Handle event maps.
       if (callback !== void 0 && 'context' in opts && opts.context === void 0) opts.context = callback;
       for (names = _.keys(name); i < names.length ; i++) {
-        events = eventsApi(iteratee, events, names[i], name[names[i]], opts);
+        memo = iteratee(memo, names[i], name[names[i]], opts);
       }
     } else if (name && eventSplitter.test(name)) {
-      // Handle space separated event names by delegating them individually.
+      // Handle space separated event names.
       for (names = name.split(eventSplitter); i < names.length; i++) {
-        events = iteratee(events, names[i], callback, opts);
+        memo = iteratee(memo, names[i], callback, opts);
       }
     } else {
-      // Finally, standard events.
-      events = iteratee(events, name, callback, opts);
+      memo = iteratee(memo, name, callback, opts);
     }
-    return events;
+    return memo;
   };
 
   // Bind an event to a `callback` function. Passing `"all"` will bind
@@ -165,7 +147,8 @@
     return internalOn(this, name, callback, context);
   };
 
-  // Guard the `listening` argument from the public API.
+  // An internal use `on` function, used to guard the `listening` argument from
+  // the public API.
   var internalOn = function(obj, name, callback, context, listening) {
     obj._events = eventsApi(onApi, obj._events || {}, name, callback, {
         context: context,
@@ -182,8 +165,7 @@
   };
 
   // Inversion-of-control versions of `on`. Tell *this* object to listen to
-  // an event in another object... keeping track of what it's listening to
-  // for easier unbinding later.
+  // an event in another object... keeping track of what it's listening to.
   Events.listenTo =  function(obj, name, callback) {
     if (!obj) return this;
     var id = obj._listenId || (obj._listenId = _.uniqueId('l'));
@@ -251,6 +233,7 @@
 
   // The reducing API that removes a callback from the `events` object.
   var offApi = function(events, name, callback, options) {
+    // No events to consider.
     if (!events) return;
 
     var i = 0, listening;
@@ -305,9 +288,9 @@
   };
 
   // Bind an event to only be triggered a single time. After the first time
-  // the callback is invoked, its listener will be removed. If multiple events
-  // are passed in using the space-separated syntax, the handler will fire
-  // once for each event, not once for a combination of all events.
+  // the callback is invoked, it will be removed. When multiple events are
+  // passed in using the space-separated syntax, the event will fire once for every
+  // event you passed in, not once for a combination of all events
   Events.once =  function(name, callback, context) {
     // Map the event into a `{event: once}` object.
     var events = eventsApi(onceMap, {}, name, callback, _.bind(this.off, this));
@@ -495,6 +478,9 @@
       var changed = this.changed;
       var prev    = this._previousAttributes;
 
+      // Check for changes of `id`.
+      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
+
       // For each `set` attribute, update or delete the current value.
       for (var attr in attrs) {
         val = attrs[attr];
@@ -506,9 +492,6 @@
         }
         unset ? delete current[attr] : current[attr] = val;
       }
-
-      // Update the `id`.
-      this.id = this.get(this.idAttribute);
 
       // Trigger all relevant attribute changes.
       if (!silent) {
@@ -732,8 +715,7 @@
 
   });
 
-  // Underscore methods that we want to implement on the Model, mapped to the
-  // number of arguments they take.
+  // Underscore methods that we want to implement on the Model.
   var modelMethods = { keys: 1, values: 1, pairs: 1, invert: 1, pick: 0,
       omit: 0, chain: 1, isEmpty: 1 };
 
@@ -766,16 +748,6 @@
   var setOptions = {add: true, remove: true, merge: true};
   var addOptions = {add: true, remove: false};
 
-  // Splices `insert` into `array` at index `at`.
-  var splice = function(array, insert, at) {
-    at = Math.min(Math.max(at, 0), array.length);
-    var tail = Array(array.length - at);
-    var length = insert.length;
-    for (var i = 0; i < tail.length; i++) tail[i] = array[i + at];
-    for (i = 0; i < length; i++) array[i + at] = insert[i];
-    for (i = 0; i < tail.length; i++) array[i + length + at] = tail[i];
-  };
-
   // Define the Collection's inheritable methods.
   _.extend(Collection.prototype, Events, {
 
@@ -798,9 +770,7 @@
       return Backbone.sync.apply(this, arguments);
     },
 
-    // Add a model, or list of models to the set. `models` may be Backbone
-    // Models or raw JavaScript objects to be converted to Models, or any
-    // combination of the two.
+    // Add a model, or list of models to the set.
     add: function(models, options) {
       return this.set(models, _.extend({merge: false}, options, addOptions));
     },
@@ -820,88 +790,83 @@
     // already exist in the collection, as necessary. Similar to **Model#set**,
     // the core operation for updating the data contained by the collection.
     set: function(models, options) {
-      if (models == null) return;
-
       options = _.defaults({}, options, setOptions);
       if (options.parse && !this._isModel(models)) models = this.parse(models, options);
-
       var singular = !_.isArray(models);
-      models = singular ? [models] : models.slice();
-
+      models = singular ? (models ? [models] : []) : models.slice();
+      var id, model, attrs, existing, sort;
       var at = options.at;
       if (at != null) at = +at;
       if (at < 0) at += this.length + 1;
-
-      var set = [];
-      var toAdd = [];
-      var toRemove = [];
-      var modelMap = {};
-
-      var add = options.add;
-      var merge = options.merge;
-      var remove = options.remove;
-
-      var sort = false;
       var sortable = this.comparator && (at == null) && options.sort !== false;
       var sortAttr = _.isString(this.comparator) ? this.comparator : null;
+      var toAdd = [], toRemove = [], modelMap = {};
+      var add = options.add, merge = options.merge, remove = options.remove;
+      var order = !sortable && add && remove ? [] : false;
+      var orderChanged = false;
 
       // Turn bare objects into model references, and prevent invalid models
       // from being added.
-      var model;
       for (var i = 0; i < models.length; i++) {
-        model = models[i];
+        attrs = models[i];
 
         // If a duplicate is found, prevent it from being added and
         // optionally merge it into the existing model.
-        var existing = this.get(model);
-        if (existing) {
-          if (merge && model !== existing) {
-            var attrs = this._isModel(model) ? model.attributes : model;
+        if (existing = this.get(attrs)) {
+          if (remove) modelMap[existing.cid] = true;
+          if (merge && attrs !== existing) {
+            attrs = this._isModel(attrs) ? attrs.attributes : attrs;
             if (options.parse) attrs = existing.parse(attrs, options);
             existing.set(attrs, options);
-            if (sortable && !sort) sort = existing.hasChanged(sortAttr);
-          }
-          if (!modelMap[existing.cid]) {
-            modelMap[existing.cid] = true;
-            set.push(existing);
+            if (sortable && !sort && existing.hasChanged(sortAttr)) sort = true;
           }
           models[i] = existing;
 
         // If this is a new, valid model, push it to the `toAdd` list.
         } else if (add) {
-          model = models[i] = this._prepareModel(model, options);
-          if (model) {
-            toAdd.push(model);
-            this._addReference(model, options);
-            modelMap[model.cid] = true;
-            set.push(model);
-          }
+          model = models[i] = this._prepareModel(attrs, options);
+          if (!model) continue;
+          toAdd.push(model);
+          this._addReference(model, options);
         }
+
+        // Do not add multiple models with the same `id`.
+        model = existing || model;
+        if (!model) continue;
+        id = this.modelId(model.attributes);
+        if (order && (model.isNew() || !modelMap[id])) {
+          order.push(model);
+
+          // Check to see if this is actually a new model at this index.
+          orderChanged = orderChanged || !this.models[i] || model.cid !== this.models[i].cid;
+        }
+
+        modelMap[id] = true;
       }
 
-      // Remove stale models.
+      // Remove nonexistent models if appropriate.
       if (remove) {
-        for (i = 0; i < this.length; i++) {
-          model = this.models[i];
-          if (!modelMap[model.cid]) toRemove.push(model);
+        for (var i = 0; i < this.length; i++) {
+          if (!modelMap[(model = this.models[i]).cid]) toRemove.push(model);
         }
         if (toRemove.length) this._removeModels(toRemove, options);
       }
 
       // See if sorting is needed, update `length` and splice in new models.
-      var orderChanged = false;
-      var replace = !sortable && add && remove;
-      if (set.length && replace) {
-        orderChanged = this.length != set.length || _.some(this.models, function(model, index) {
-          return model !== set[index];
-        });
-        this.models.length = 0;
-        splice(this.models, set, 0);
-        this.length = this.models.length;
-      } else if (toAdd.length) {
+      if (toAdd.length || orderChanged) {
         if (sortable) sort = true;
-        splice(this.models, toAdd, at == null ? this.length : at);
-        this.length = this.models.length;
+        this.length += toAdd.length;
+        if (at != null) {
+          for (var i = 0; i < toAdd.length; i++) {
+            this.models.splice(at + i, 0, toAdd[i]);
+          }
+        } else {
+          if (order) this.models.length = 0;
+          var orderedModels = order || toAdd;
+          for (var i = 0; i < orderedModels.length; i++) {
+            this.models.push(orderedModels[i]);
+          }
+        }
       }
 
       // Silently sort the collection if appropriate.
@@ -909,10 +874,10 @@
 
       // Unless silenced, it's time to fire all appropriate add/sort events.
       if (!options.silent) {
-        for (i = 0; i < toAdd.length; i++) {
-          if (at != null) options.index = at + i;
-          model = toAdd[i];
-          model.trigger('add', model, this, options);
+        var addOpts = at != null ? _.clone(options) : options;
+        for (var i = 0; i < toAdd.length; i++) {
+          if (at != null) addOpts.index = at + i;
+          (model = toAdd[i]).trigger('add', model, this, addOpts);
         }
         if (sort || orderChanged) this.trigger('sort', this, options);
         if (toAdd.length || toRemove.length) this.trigger('update', this, options);
@@ -981,7 +946,10 @@
     // Return models with matching attributes. Useful for simple cases of
     // `filter`.
     where: function(attrs, first) {
-      return this[first ? 'find' : 'filter'](attrs);
+      var matches = _.matches(attrs);
+      return this[first ? 'find' : 'filter'](function(model) {
+        return matches(model.attributes);
+      });
     },
 
     // Return the first model with matching attributes. Useful for simple cases
@@ -994,19 +962,16 @@
     // normal circumstances, as the set will maintain sort order as each item
     // is added.
     sort: function(options) {
-      var comparator = this.comparator;
-      if (!comparator) throw new Error('Cannot sort a set without a comparator');
+      if (!this.comparator) throw new Error('Cannot sort a set without a comparator');
       options || (options = {});
 
-      var length = comparator.length;
-      if (_.isFunction(comparator)) comparator = _.bind(comparator, this);
-
       // Run sort based on type of `comparator`.
-      if (length === 1 || _.isString(comparator)) {
-        this.models = this.sortBy(comparator);
+      if (_.isString(this.comparator) || this.comparator.length === 1) {
+        this.models = this.sortBy(this.comparator, this);
       } else {
-        this.models.sort(comparator);
+        this.models.sort(_.bind(this.comparator, this));
       }
+
       if (!options.silent) this.trigger('sort', this, options);
       return this;
     },
@@ -1095,6 +1060,7 @@
     },
 
     // Internal method called by both remove and set.
+    // Returns removed models, or false if nothing is removed.
     _removeModels: function(models, options) {
       var removed = [];
       for (var i = 0; i < models.length; i++) {
@@ -1164,15 +1130,28 @@
   // right here:
   var collectionMethods = { forEach: 3, each: 3, map: 3, collect: 3, reduce: 4,
       foldl: 4, inject: 4, reduceRight: 4, foldr: 4, find: 3, detect: 3, filter: 3,
-      select: 3, reject: 3, every: 3, all: 3, some: 3, any: 3, include: 3, includes: 3,
-      contains: 3, invoke: 0, max: 3, min: 3, toArray: 1, size: 1, first: 3,
+      select: 3, reject: 3, every: 3, all: 3, some: 3, any: 3, include: 2,
+      contains: 2, invoke: 0, max: 3, min: 3, toArray: 1, size: 1, first: 3,
       head: 3, take: 3, initial: 3, rest: 3, tail: 3, drop: 3, last: 3,
       without: 0, difference: 0, indexOf: 3, shuffle: 1, lastIndexOf: 3,
-      isEmpty: 1, chain: 1, sample: 3, partition: 3, groupBy: 3, countBy: 3,
-      sortBy: 3, indexBy: 3};
+      isEmpty: 1, chain: 1, sample: 3, partition: 3 };
 
   // Mix in each Underscore method as a proxy to `Collection#models`.
   addUnderscoreMethods(Collection, collectionMethods, 'models');
+
+  // Underscore methods that take a property name as an argument.
+  var attributeMethods = ['groupBy', 'countBy', 'sortBy', 'indexBy'];
+
+  // Use attributes instead of properties.
+  _.each(attributeMethods, function(method) {
+    if (!_[method]) return;
+    Collection.prototype[method] = function(value, context) {
+      var iterator = _.isFunction(value) ? value : function(model) {
+        return model.get(value);
+      };
+      return _[method](this.models, iterator, context);
+    };
+  });
 
   // Backbone.View
   // -------------
@@ -1197,7 +1176,7 @@
   // Cached regex to split keys for `delegate`.
   var delegateEventSplitter = /^(\S+)\s*(.*)$/;
 
-  // List of view options to be set as properties.
+  // List of view options to be merged as properties.
   var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName', 'events'];
 
   // Set up all inheritable **Backbone.View** properties and methods.
@@ -1541,7 +1520,7 @@
   // falls back to polling.
   var History = Backbone.History = function() {
     this.handlers = [];
-    this.checkUrl = _.bind(this.checkUrl, this);
+    _.bindAll(this, 'checkUrl');
 
     // Ensure that `History` can be used outside of the browser.
     if (typeof window !== 'undefined') {
@@ -1634,7 +1613,7 @@
       this.options          = _.extend({root: '/'}, this.options, options);
       this.root             = this.options.root;
       this._wantsHashChange = this.options.hashChange !== false;
-      this._hasHashChange   = 'onhashchange' in window && (document.documentMode === void 0 || document.documentMode > 7);
+      this._hasHashChange   = 'onhashchange' in window;
       this._useHashChange   = this._wantsHashChange && this._hasHashChange;
       this._wantsPushState  = !!this.options.pushState;
       this._hasPushState    = !!(this.history && this.history.pushState);
@@ -1753,7 +1732,7 @@
       // If the root doesn't match, no routes can match either.
       if (!this.matchRoot()) return false;
       fragment = this.fragment = this.getFragment(fragment);
-      return _.some(this.handlers, function(handler) {
+      return _.any(this.handlers, function(handler) {
         if (handler.route.test(fragment)) {
           handler.callback(fragment);
           return true;
@@ -1897,6 +1876,7 @@
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"jquery":5,"underscore":6}],2:[function(require,module,exports){
+(function (global){
 /**
  * BezierEasing - use bezier curve for transition easing function
  * by Gaëtan Renaudeau 2014 - 2015 – MIT License
@@ -1917,7 +1897,7 @@ var SUBDIVISION_MAX_ITERATIONS = 10;
 var kSplineTableSize = 11;
 var kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
 
-var float32ArraySupported = typeof Float32Array === "function";
+var float32ArraySupported = 'Float32Array' in global;
 
 function A (aA1, aA2) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
 function B (aA1, aA2) { return 3.0 * aA2 - 6.0 * aA1; }
@@ -1983,8 +1963,6 @@ function BezierEasing (points, b, c, d) {
   this._p = points;
   this._mSampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);
   this._precomputed = false;
-
-  this.get = this.get.bind(this);
 }
 
 BezierEasing.prototype = {
@@ -2077,19 +2055,20 @@ BezierEasing.css = {
 
 module.exports = BezierEasing;
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],3:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
  * 
- * Copyright (c) 2013-2015 Petka Antonov
+ * Copyright (c) 2014 Petka Antonov
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * furnished to do so, subject to the following conditions:</p>
  * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -2104,7 +2083,7 @@ module.exports = BezierEasing;
  * 
  */
 /**
- * bluebird build version 2.10.1
+ * bluebird build version 2.9.33
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, cancel, using, filter, any, each, timers
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -2295,6 +2274,7 @@ var targetRejected = function(e, context) {
 };
 
 var bindingResolved = function(thisArg, context) {
+    this._setBoundTo(thisArg);
     if (this._isPending()) {
         this._resolveCallback(context.target);
     }
@@ -2309,8 +2289,6 @@ Promise.prototype.bind = function (thisArg) {
     var ret = new Promise(INTERNAL);
     ret._propagateFrom(this, 1);
     var target = this._target();
-
-    ret._setBoundTo(maybePromise);
     if (maybePromise instanceof Promise) {
         var context = {
             promiseRejectionQueued: false,
@@ -2322,6 +2300,7 @@ Promise.prototype.bind = function (thisArg) {
         maybePromise._then(
             bindingResolved, bindingRejected, ret._progress, ret, context);
     } else {
+        ret._setBoundTo(thisArg);
         ret._resolveCallback(target);
     }
     return ret;
@@ -2344,12 +2323,13 @@ Promise.bind = function (thisArg, value) {
     var maybePromise = tryConvertToPromise(thisArg);
     var ret = new Promise(INTERNAL);
 
-    ret._setBoundTo(maybePromise);
     if (maybePromise instanceof Promise) {
-        maybePromise._then(function() {
+        maybePromise._then(function(thisArg) {
+            ret._setBoundTo(thisArg);
             ret._resolveCallback(value);
         }, ret._reject, ret._progress, ret, null);
     } else {
+        ret._setBoundTo(thisArg);
         ret._resolveCallback(value);
     }
     return ret;
@@ -3072,7 +3052,7 @@ function safePredicate(predicate, e) {
 CatchFilter.prototype.doFilter = function (e) {
     var cb = this._callback;
     var promise = this._promise;
-    var boundTo = promise._boundValue();
+    var boundTo = promise._boundTo;
     for (var i = 0, len = this._instances.length; i < len; ++i) {
         var item = this._instances[i];
         var itemIsErrorType = item === Error ||
@@ -3160,8 +3140,6 @@ var possiblyUnhandledRejection;
 var debugging = false || (util.isNode &&
                     (!!process.env["BLUEBIRD_DEBUG"] ||
                      process.env["NODE_ENV"] === "development"));
-
-if (util.isNode && process.env["BLUEBIRD_DEBUG"] == 0) debugging = false;
 
 if (debugging) {
     async.disableTrampolineIfNecessary();
@@ -3353,8 +3331,6 @@ Promise.prototype.thenReturn = function (value) {
             undefined,
             undefined
        );
-    } else if (value instanceof Promise) {
-        value._ignoreRejections();
     }
     return this._then(returner, undefined, undefined, value, undefined);
 };
@@ -3637,7 +3613,7 @@ function finallyHandler(reasonOrValue) {
     var handler = this.handler;
 
     var ret = promise._isBound()
-                    ? handler.call(promise._boundValue())
+                    ? handler.call(promise._boundTo)
                     : handler();
 
     if (ret !== undefined) {
@@ -3662,7 +3638,7 @@ function tapHandler(value) {
     var handler = this.handler;
 
     var ret = promise._isBound()
-                    ? handler.call(promise._boundValue(), value)
+                    ? handler.call(promise._boundTo, value)
                     : handler(value);
 
     if (ret !== undefined) {
@@ -3953,7 +3929,6 @@ module.exports = function(Promise,
                           apiRejection,
                           tryConvertToPromise,
                           INTERNAL) {
-var getDomain = Promise._getDomain;
 var async = _dereq_("./async.js");
 var util = _dereq_("./util.js");
 var tryCatch = util.tryCatch;
@@ -3964,8 +3939,7 @@ var EMPTY_ARRAY = [];
 function MappingPromiseArray(promises, fn, limit, _filter) {
     this.constructor$(promises);
     this._promise._captureStackTrace();
-    var domain = getDomain();
-    this._callback = domain === null ? fn : domain.bind(fn);
+    this._callback = fn;
     this._preservedValues = _filter === INTERNAL
         ? new Array(this.length())
         : null;
@@ -4000,7 +3974,7 @@ MappingPromiseArray.prototype._promiseFulfilled = function (value, index) {
         if (preservedValues !== null) preservedValues[index] = value;
 
         var callback = this._callback;
-        var receiver = this._promise._boundValue();
+        var receiver = this._promise._boundTo;
         this._promise._pushContext();
         var ret = tryCatch(callback).call(receiver, value, index, length);
         this._promise._popContext();
@@ -4138,8 +4112,7 @@ var errorObj = util.errorObj;
 function spreadAdapter(val, nodeback) {
     var promise = this;
     if (!util.isArray(val)) return successAdapter.call(promise, val, nodeback);
-    var ret =
-        tryCatch(nodeback).apply(promise._boundValue(), [null].concat(val));
+    var ret = tryCatch(nodeback).apply(promise._boundTo, [null].concat(val));
     if (ret === errorObj) {
         async.throwLater(ret.e);
     }
@@ -4147,7 +4120,7 @@ function spreadAdapter(val, nodeback) {
 
 function successAdapter(val, nodeback) {
     var promise = this;
-    var receiver = promise._boundValue();
+    var receiver = promise._boundTo;
     var ret = val === undefined
         ? tryCatch(nodeback).call(receiver, null)
         : tryCatch(nodeback).call(receiver, null, val);
@@ -4163,13 +4136,13 @@ function errorAdapter(reason, nodeback) {
         newReason.cause = reason;
         reason = newReason;
     }
-    var ret = tryCatch(nodeback).call(promise._boundValue(), reason);
+    var ret = tryCatch(nodeback).call(promise._boundTo, reason);
     if (ret === errorObj) {
         async.throwLater(ret.e);
     }
 }
 
-Promise.prototype.asCallback =
+Promise.prototype.asCallback = 
 Promise.prototype.nodeify = function (nodeback, options) {
     if (typeof nodeback == "function") {
         var adapter = successAdapter;
@@ -4295,7 +4268,6 @@ if (util.isNode) {
 }
 util.notEnumerableProp(Promise, "_getDomain", getDomain);
 
-var UNDEFINED_BINDING = {};
 var async = _dereq_("./async.js");
 var errors = _dereq_("./errors.js");
 var TypeError = Promise.TypeError = errors.TypeError;
@@ -4580,10 +4552,8 @@ Promise.prototype._receiverAt = function (index) {
         ? this._receiver0
         : this[
             index * 5 - 5 + 4];
-    if (ret === UNDEFINED_BINDING) {
-        return undefined;
-    } else if (ret === undefined && this._isBound()) {
-        return this._boundValue();
+    if (ret === undefined && this._isBound()) {
+        return this._boundTo;
     }
     return ret;
 };
@@ -4606,20 +4576,6 @@ Promise.prototype._rejectionHandlerAt = function (index) {
         : this[index * 5 - 5 + 1];
 };
 
-Promise.prototype._boundValue = function() {
-    var ret = this._boundTo;
-    if (ret !== undefined) {
-        if (ret instanceof Promise) {
-            if (ret.isFulfilled()) {
-                return ret.value();
-            } else {
-                return undefined;
-            }
-        }
-    }
-    return ret;
-};
-
 Promise.prototype._migrateCallbacks = function (follower, index) {
     var fulfill = follower._fulfillmentHandlerAt(index);
     var reject = follower._rejectionHandlerAt(index);
@@ -4627,7 +4583,6 @@ Promise.prototype._migrateCallbacks = function (follower, index) {
     var promise = follower._promiseAt(index);
     var receiver = follower._receiverAt(index);
     if (promise instanceof Promise) promise._setIsMigrated();
-    if (receiver === undefined) receiver = UNDEFINED_BINDING;
     this._addCallbacks(fulfill, reject, progress, promise, receiver, null);
 };
 
@@ -4771,7 +4726,7 @@ Promise.prototype._settlePromiseFromHandler = function (
     promise._pushContext();
     var x;
     if (receiver === APPLY && !this._isRejected()) {
-        x = tryCatch(handler).apply(this._boundValue(), value);
+        x = tryCatch(handler).apply(this._boundTo, value);
     } else {
         x = tryCatch(handler).call(receiver, value);
     }
@@ -4841,6 +4796,8 @@ Promise.prototype._settlePromiseAt = function (index) {
         this._isCarryingStackTrace() ? this._getCarriedStackTrace() : undefined;
     var value = this._settledValue;
     var receiver = this._receiverAt(index);
+
+
     this._clearCallbackDataAtIndex(index);
 
     if (typeof handler === "function") {
@@ -5538,16 +5495,11 @@ function promisifyAll(obj, suffix, filter, promisifier) {
         var key = methods[i];
         var fn = methods[i+1];
         var promisifiedKey = key + suffix;
-        if (promisifier === makeNodePromisified) {
-            obj[promisifiedKey] =
-                makeNodePromisified(key, THIS, key, fn, suffix);
-        } else {
-            var promisified = promisifier(fn, function() {
-                return makeNodePromisified(key, THIS, key, fn, suffix);
-            });
-            util.notEnumerableProp(promisified, "__isPromisified__", true);
-            obj[promisifiedKey] = promisified;
-        }
+        obj[promisifiedKey] = promisifier === makeNodePromisified
+                ? makeNodePromisified(key, THIS, key, fn, suffix)
+                : promisifier(fn, function() {
+                    return makeNodePromisified(key, THIS, key, fn, suffix);
+                });
     }
     util.toFastProperties(obj);
     return obj;
@@ -5829,7 +5781,6 @@ module.exports = function(Promise,
                           apiRejection,
                           tryConvertToPromise,
                           INTERNAL) {
-var getDomain = Promise._getDomain;
 var async = _dereq_("./async.js");
 var util = _dereq_("./util.js");
 var tryCatch = util.tryCatch;
@@ -5858,8 +5809,7 @@ function ReductionPromiseArray(promises, fn, accum, _each) {
         }
     }
     if (!(isPromise || this._zerothIsAccum)) this._gotAccum = true;
-    var domain = getDomain();
-    this._callback = domain === null ? fn : domain.bind(fn);
+    this._callback = fn;
     this._accum = accum;
     if (!rejected) async.invoke(init, this, undefined);
 }
@@ -5913,7 +5863,7 @@ ReductionPromiseArray.prototype._promiseFulfilled = function (value, index) {
     if (!gotAccum) return;
 
     var callback = this._callback;
-    var receiver = this._promise._boundValue();
+    var receiver = this._promise._boundTo;
     var ret;
 
     for (var i = this._reducingIndex; i < length; ++i) {
@@ -6558,20 +6508,10 @@ module.exports = function (Promise, apiRejection, tryConvertToPromise,
                         "you must pass at least 2 arguments to Promise.using");
         var fn = arguments[len - 1];
         if (typeof fn !== "function") return apiRejection("fn must be a function\u000a\u000a    See http://goo.gl/916lJJ\u000a");
-
-        var input;
-        var spreadArgs = true;
-        if (len === 2 && Array.isArray(arguments[0])) {
-            input = arguments[0];
-            len = input.length;
-            spreadArgs = false;
-        } else {
-            input = arguments;
-            len--;
-        }
+        len--;
         var resources = new Array(len);
         for (var i = 0; i < len; ++i) {
-            var resource = input[i];
+            var resource = arguments[i];
             if (Disposer.isDisposer(resource)) {
                 var disposer = resource;
                 resource = resource.promise();
@@ -6595,8 +6535,7 @@ module.exports = function (Promise, apiRejection, tryConvertToPromise,
                 promise._pushContext();
                 var ret;
                 try {
-                    ret = spreadArgs
-                        ? fn.apply(undefined, vals) : fn.call(undefined,  vals);
+                    ret = fn.apply(undefined, vals);
                 } finally {
                     promise._popContext();
                 }
@@ -6994,9 +6933,7 @@ function drainQueue() {
         currentQueue = queue;
         queue = [];
         while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
+            currentQueue[queueIndex].run();
         }
         queueIndex = -1;
         len = queue.length;
@@ -7048,6 +6985,7 @@ process.binding = function (name) {
     throw new Error('process.binding is not supported');
 };
 
+// TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
@@ -17892,7 +17830,7 @@ var giphyUpload = function(blob, model, api_key, callback) {
     fd.append('source_post_url', model.viewerUrl);
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://upload.giphy.com/v1/gifs");
+    xhr.open("POST", "https://upload.giphy.com/v1/gifs");
     xhr.onload = function() {
         var response = JSON.parse(xhr.responseText);
         console.log(response);
