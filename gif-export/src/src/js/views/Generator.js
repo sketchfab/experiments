@@ -247,7 +247,7 @@ var GeneratorView = Backbone.View.extend({
                 button.text(originalLabel);
 
                 $.ajax({
-                    'url': 'http://api.giphy.com/v1/gifs/' + data.id + '?api_key=' + api_key,
+                    'url': 'https://api.giphy.com/v1/gifs/' + data.id + '?api_key=' + api_key,
                 }).then(function(response) {
                     window.open(response.data.url);
                 });
