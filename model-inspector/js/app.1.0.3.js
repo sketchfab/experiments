@@ -12410,7 +12410,8 @@ var AppView = Backbone.View.extend({
     el: 'body',
 
     events: {
-        'click li[data-id]': 'toggle'
+        'click li[data-id]': 'toggle',
+        'change input[name="postprocessing"]': 'onPostProcessingChange'
     },
 
     initialize: function() {
@@ -12429,7 +12430,10 @@ var AppView = Backbone.View.extend({
             return;
         }
 
-        this.initViewer(this.initOptions.bind(this));
+        this.initViewer(function(){
+            this.initOptions();
+            this.initPostProcessing();
+        }.bind(this));
 
         this.hidden = [];
 
@@ -12596,18 +12600,49 @@ var AppView = Backbone.View.extend({
         var template = _.template(tplInfo);
 
         $.ajax({
-            url: 'https://sketchfab.com/v2/models/' + this.urlid,
+            url: 'https://sketchfab.com/i/models/' + this.urlid,
             success: function(response) {
 
                 var info = _.clone(response);
                 info.materialsCount = (_.keys(info.options.materials)).length;
-
                 $('.info').html(template({
                     info: info
                 }));
             }
         });
 
+    },
+
+    initPostProcessing: function() {
+
+        var out = '<ul>';
+
+        this._api.getPostProcessing(function(settings){
+            // settings.enable
+
+            if (settings.enable) {
+                $('input[name="postprocessing"]').prop('disabled', false);
+            }
+
+            out += [
+                settings.sharpenEnable ? '<li>Sharpen</li>' : '',
+                settings.chromaticAberrationEnable ? '<li>Chromatic Aberration</li>' : '',
+                settings.vignetteEnable ? '<li>Vignette</li>' : '',
+                settings.bloomEnable ? '<li>Bloom</li>' : '',
+                settings.toneMappingEnable ? '<li>Tone Mapping</li>' : '',
+                settings.colorBalanceEnable ? '<li>Color Balance</li>' : '',
+            ].join('');
+            out += '</ul>';
+
+            $('.postprocessing-settings').html(out);
+
+        });
+    },
+
+    onPostProcessingChange: function(e) {
+        this._api.setPostProcessing( {
+            enable: $(e.target).is(':checked'),
+        } );
     }
 });
 

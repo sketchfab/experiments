@@ -5,11 +5,11 @@ body,html{background:#f2f2f2;font-family:Roboto,sans-serif;padding:0;margin:0;he
 .inspector h2{display:block;padding-bottom:5px;font-size:14px;font-weight:400;text-transform:uppercase;border-bottom:2px solid #444}
 .objects{padding:0 10px}
 .objects ul{padding-left:10px;margin:0}
-.objects li{cursor:pointer;padding:5px 0}
+.objects li{cursor:pointer}
 .objects li>span:hover{background:#444}
-.objects li.hidden{text-decoration:line-through}
+.objects li.hidden{text-decoration:line-through;color:#666}
 .objects .icon{font-size:18px}
 .stat{overflow:auto;margin:0;padding:0}
-.stat li{width:50%;float:left;list-style:none;margin-bottom:15px}
-.stat .field{display:block;width:20px;padding-bottom:5px;margin-bottom:5px;overflow:visible;border-bottom:1px solid #444;white-space:nowrap;color:#CCC}
+.stat li{width:50%;float:left;list-style:none;margin-bottom:5px}
+.stat .field{display:block;width:20px;padding-bottom:5px;overflow:visible;border-bottom:1px solid #444;white-space:nowrap;color:#CCC}
 .stat .value{display:block;font-size:24px}
