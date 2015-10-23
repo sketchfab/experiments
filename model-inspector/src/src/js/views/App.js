@@ -206,12 +206,11 @@ var AppView = Backbone.View.extend({
         var template = _.template(tplInfo);
 
         $.ajax({
-            url: 'https://sketchfab.com/v2/models/' + this.urlid,
+            url: 'https://sketchfab.com/i/models/' + this.urlid,
             success: function(response) {
 
                 var info = _.clone(response);
                 info.materialsCount = (_.keys(info.options.materials)).length;
-
                 $('.info').html(template({
                     info: info
                 }));
