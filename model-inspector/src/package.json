@@ -1,6 +1,6 @@
 {
   "name": "api-transform",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "sketchfab-viewer-1.0.0.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
