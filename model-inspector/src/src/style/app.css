@@ -52,13 +52,13 @@ body {
 }
     .objects li {
         cursor: pointer;
-        padding: 5px 0;
     }
     .objects li > span:hover {
         background: #444;
     }
     .objects li.hidden {
         text-decoration: line-through;
+        color: #666;
     }
     .objects .icon {
         font-size: 18px;
@@ -73,13 +73,12 @@ body {
         width: 50%;
         float: left;
         list-style: none;
-        margin-bottom: 15px;
+        margin-bottom: 5px;
     }
     .stat .field {
         display: block;
         width: 20px;
         padding-bottom: 5px;
-        margin-bottom: 5px;
         overflow: visible;
         border-bottom: 1px solid #444;
         white-space: nowrap;
