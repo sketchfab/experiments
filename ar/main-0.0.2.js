@@ -16,7 +16,7 @@ var loadModel = function ( callback ) {
     var modelId = modelInput.value;
     var client = new Sketchfab( '1.0.0', viewer );
 
-    if ( window.location.host.indexOf( 'sketchfab-local' ) )
+    if ( window.location.host.indexOf( 'sketchfab-local' ) !== -1 )
         client._url = 'https://sketchfab-local.com/models/XXXX/embed';
 
     client.init( modelId, {
