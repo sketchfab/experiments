@@ -4,7 +4,8 @@ var Backbone = require("backbone");
 
 var Router = Backbone.Router.extend({
     routes: {
-        '': 'index'
+        '': 'index',
+        'model/:urlid': 'screenshot'
     },
 
     initialize: function(options) {
@@ -14,6 +15,10 @@ var Router = Backbone.Router.extend({
     index: function() {
 
     },
+
+    screenshot: function(urlid) {
+        this.appView.initViewer(urlid, false);
+    }
 });
 
 module.exports = Router;
