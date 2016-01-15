@@ -1,0 +1,44 @@
+.experiments {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0 30px;
+}
+
+.experiments li {
+    position: relative;
+    box-sizing: border-box;
+    flex: 0 1 1;
+    flex-basis: 33.333%;
+    list-style: none;
+
+    margin: 0;
+    padding: 0;
+}
+.experiments a {
+    text-decoration: none;
+}
+
+.experiment {
+    box-sizing: border-box;
+    margin: 10px;
+    border-radius: 3px;
+    min-height: 160px;
+    padding: 30px;
+    background: #fff;
+    box-shadow: 0 1px 5px rgba(85,85,85,.15);
+}
+    .experiment h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+    .experiment p {
+        color: #555;
+    }
+
+@media (max-width: 1024px) {
+    .experiments {
+        display: block;
+    }
+}

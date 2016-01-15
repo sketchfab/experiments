@@ -1,0 +1,15 @@
+body {
+    background: #F2F2F2;
+    font-family: "Open Sans", sans-serif;
+}
+
+a {
+    color: #1CAAD9;
+}
+
+.page-title {
+    margin: 2em 0;
+    font-family: "Titillium Web", sans-serif;
+    color: #1CAAD9;
+    text-align: center;
+}
