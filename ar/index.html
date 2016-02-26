@@ -12,11 +12,16 @@
         <iframe id="viewer" width="100%" height="100%" src="about:blank" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
 
         <div id="controls">
-            <h1>Sketchfab Video Prototype</h1>
+
+             <h1>Sketchfab WebCam And Augmented Reality (AR) Prototype</h1>
+              <p>Please Allow Camera autorisation popup</p>
+              <select id="videoSource"></select>
+              
             <p>Enter a model id to view it in AR <a href="4.png">marker (to print or put on a phone)</a></p>
-            <input id="model" type="text" value="f7d347b6afb349b296bce9d0b336f95a">
+            <input id="model" style="width: 240px" type="text" value="f7d347b6afb349b296bce9d0b336f95a">
             <button id="capture-button">play</button>
             <button id="stop-button">stop</button>
+           
         </div>
 
         <div id="debug">

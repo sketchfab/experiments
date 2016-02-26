@@ -1,6 +1,6 @@
 'use strict';
 
-var video = document.querySelector( '#video' );
+var videoElement = document.querySelector( '#video' );
 var rasterCanvas = document.querySelector( '#rasterCanvas' );
 var controls = document.querySelector( '#controls' );
 var startButton = document.querySelector( '#capture-button' );
@@ -9,7 +9,96 @@ var viewer = document.querySelector( '#viewer' );
 var modelInput = document.querySelector( '#model' );
 var localMediaStream = null;
 
+var videoSelect = document.querySelector( '#videoSource' );
+
+var errorCallback = function ( e ) {
+    console.error( e );
+
+    // latest Draft of media Device compatibility
+    // aka Firefox
+    if ( e.message && e.message === 'audio and/or video is required' ) {
+        var p = navigator.mediaDevices.getUserMedia( {
+            audio: false,
+            video: true
+        } );
+
+        p.then( function ( mediaStream ) {
+
+            videoElement.src = window.URL.createObjectURL( mediaStream );
+
+            videoElement.controls = false;
+            localMediaStream = mediaStream;
+            loadModel( getNodeList );
+
+        } );
+    }
+};
+
+function gotDevices( deviceInfos ) {
+
+    // Handles being called several times to update labels. Preserve values.
+    var select = videoSelect;
+    var value = select.value;
+
+    while ( select.firstChild ) {
+        select.removeChild( select.firstChild );
+    }
+
+
+    for ( var i = 0; i !== deviceInfos.length; ++i ) {
+        var deviceInfo = deviceInfos[ i ];
+        var option = document.createElement( 'option' );
+        option.value = deviceInfo.deviceId;
+        if ( deviceInfo.kind === 'videoinput' ) {
+            option.text = deviceInfo.label || 'camera ' + ( videoSelect.length + 1 );
+            videoSelect.appendChild( option );
+        } else {
+            console.log( 'Some other kind of source/device: ', deviceInfo );
+        }
+    }
+
+    if ( Array.prototype.slice.call( select.childNodes ).some( function ( n ) {
+            return n.value === value;
+        } ) ) {
+        select.value = value;
+    }
+}
+
+if ( navigator.mediaDevices && navigator.mediaDevices.enumerateDevices ) {
+    navigator.mediaDevices.enumerateDevices().then( gotDevices ).catch( errorCallback );
+}
+
 var clientApi;
+var rootNode;
+
+var urlIdsList = [ 'f7d347b6afb349b296bce9d0b336f95a' ];
+
+
+
+var updateUrlIds = function () {
+
+    var hash = window.location.hash;
+
+    var entries = hash.slice( 1 ).split( '&' );
+    if ( hash ) {
+        for ( var i = 0, l = entries.length; i < l; i++ ) {
+            var entry = entries[ i ].split( '=' );
+
+            if ( !entry || entry.length !== 2 ) continue;
+
+            if ( entry[ 0 ] === 'id' ) {
+                urlIdsList = entry[ 1 ].split( '.' );
+            }
+        }
+    }
+
+};
+
+window.addEventListener( 'hashchange', updateUrlIds, false );
+updateUrlIds();
+modelInput.value = urlIdsList[ 0 ].trim();
+
+
 
 var loadModel = function ( callback ) {
 
@@ -79,59 +168,70 @@ var getNodeList = function () {
     track();
 };
 
-var errorCallback = function ( e ) {
-    console.error( e );
 
-    // latest Draft of media Device compatibility
-    // aka Firefox
-    if ( e.message && e.message === 'audio and/or video is required' ) {
-        var p = navigator.mediaDevices.getUserMedia( {
-            audio: false,
-            video: true
+function start() {
+    if ( localMediaStream ) {
+        localMediaStream.getTracks().forEach( function ( track ) {
+            track.stop();
         } );
+    }
+    var videoSource = videoSelect.value;
+    var deviceId = videoSource ? {
+        exact: videoSource
+    } : undefined;
 
-        p.then( function ( mediaStream ) {
+    var constraints;
+    if ( navigator.getUserMedia ) {
 
-            video.src = window.URL.createObjectURL( mediaStream );
+        // old webrtc aka chrome
+        constraints = {
+            video: {
+                optional: [ {
+                    sourceId: videoSource
+                } ]
+            }
+        };
 
-            video.controls = false;
-            localMediaStream = mediaStream;
+
+        navigator.getUserMedia( constraints, function ( stream ) {
+
+            videoElement.src = window.URL.createObjectURL( stream );
+            //videoElement.srcObject = stream;
+            videoElement.controls = false;
+            localMediaStream = stream;
+
             loadModel( getNodeList );
 
-        } );
-    }
-};
+        }, errorCallback );
+    } else if ( navigator.mediaDevices.getUserMedia ) {
 
-
-var getConstraints = function ( callback ) {
-    var videoSource = null;
-
-    // MediaStreamTrack is not defined, let the browser decide
-    if ( !MediaStreamTrack.getSources ) {
-        callback( {} );
-    } else {
-
-        MediaStreamTrack.getSources( function ( sourceInfos ) {
-
-            for ( var i = 0; i !== sourceInfos.length; ++i ) {
-                var sourceInfo = sourceInfos[ i ];
-                if ( sourceInfo.kind === 'video' && sourceInfo.facing === "environment" ) {
-                    videoSource = sourceInfo.id;
-                }
+        //REAL webrtc thank you
+        constraints = {
+            video: {
+                deviceId: deviceId
             }
+        };
 
-            var constraints = {
-                video: {
-                    optional: [ {
-                        sourceId: videoSource
-                    } ]
-                }
-            };
+        navigator.mediaDevices.getUserMedia( constraints )
+            .then( function ( stream ) {
 
-            callback( constraints );
-        } );
+                //videoElement.src = window.URL.createObjectURL( stream );
+                videoElement.srcObject = stream;
+                videoElement.controls = false;
+                localMediaStream = stream;
+
+                loadModel( getNodeList );
+
+                // Refresh button list in case labels have become available
+                return navigator.mediaDevices.enumerateDevices();
+            } )
+            .then( gotDevices )
+            .catch( errorCallback );
     }
-};
+}
+
+videoSelect.onchange = start;
+
 
 navigator.getUserMedia = ( navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
@@ -141,18 +241,11 @@ navigator.getUserMedia = ( navigator.getUserMedia ||
 
 startButton.addEventListener( 'click', function () {
     if ( navigator.getUserMedia ) {
-        getConstraints( function ( constraints ) {
-            navigator.getUserMedia( constraints, function ( stream ) {
-                video.src = window.URL.createObjectURL( stream );
-                video.controls = false;
-                localMediaStream = stream;
-                loadModel( getNodeList );
+        start();
 
-            }, errorCallback );
-        } );
     } else {
         errorCallback( {
-            target: video
+            target: videoElement
         } );
     }
 }, false );
@@ -175,8 +268,11 @@ rasterCanvas.width = sizeX;
 rasterCanvas.height = sizeY;
 
 
+
 var track = function () {
 
+
+    var previousId;
     var markers = {};
     var markerIds = [];
 
@@ -192,7 +288,7 @@ var track = function () {
     intervalId = setInterval( function () {
         if ( rootTransform && rootNode ) {
 
-            ctxt.drawImage( video, 0, 0, sizeX, sizeY );
+            ctxt.drawImage( videoElement, 0, 0, sizeX, sizeY );
             rasterCanvas.changed = true;
 
             var markerCount = detector.detectMarkerLite( raster, threshold );
@@ -216,8 +312,18 @@ var track = function () {
                     }
                 }
 
-                // console.log(currId);
-                // console.log(detector.getARCodeIndex(0));
+
+                // HERE we switch model if necessary
+                if ( previousId !== currId && currId < urlIdsList.length ) {
+
+                    console.log( currId );
+                    //console.log(detector.getARCodeIndex(0));
+
+                    modelInput.value = urlIdsList[ currId ];
+                    loadModel( getNodeList() );
+
+                    previousId = currId;
+                }
 
                 // Get the transformation matrix for the detected marker.
                 detector.getTransformMatrix( 0, resultMat );
