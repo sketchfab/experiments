@@ -1,0 +1,44 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#video {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -100;
+    background-size: cover;
+}
+
+#viewer {
+    position: fixed;
+    z-index: 1;
+    display: none;
+}
+
+#controls {
+    background: #FFFFFF;
+    padding: 10px;
+    position: absolute;
+    top: 0;
+}
+
+#model {
+    width: 220px;
+}
+
+#rasterCanvas {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    display: none;
+}
+
+.hidden {
+    visibility: hidden;
+}
