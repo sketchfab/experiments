@@ -11,6 +11,7 @@ var localMediaStream = null;
 
 var videoSelect = document.querySelector( '#videoSource' );
 
+//////// WebCam
 var errorCallback = function ( e ) {
     console.error( e );
 
@@ -28,8 +29,9 @@ var errorCallback = function ( e ) {
 
             videoElement.controls = false;
             localMediaStream = mediaStream;
-            loadModel( getNodeList );
-
+            if ( urlIdsList.length === 1 ) {
+                loadModel( getNodeList );
+            }
         } );
     }
 };
@@ -67,13 +69,13 @@ function gotDevices( deviceInfos ) {
 if ( navigator.mediaDevices && navigator.mediaDevices.enumerateDevices ) {
     navigator.mediaDevices.enumerateDevices().then( gotDevices ).catch( errorCallback );
 }
+//////// WebCam
 
 var clientApi;
 var rootNode;
+var rootTransform;
 
 var urlIdsList = [ 'f7d347b6afb349b296bce9d0b336f95a' ];
-
-
 
 var updateUrlIds = function () {
 
@@ -99,22 +101,39 @@ updateUrlIds();
 modelInput.value = urlIdsList[ 0 ].trim();
 
 
+//////// Sketchfab
+function getQueryParam( param ) {
+    var result = window.location.search.match(
+        new RegExp( "(\\?|&)" + param + "(\\[\\])?=([^&]*)" )
+    );
+
+    return result ? result[ 3 ] : false;
+}
 
 var loadModel = function ( callback ) {
 
     var modelId = modelInput.value;
+
+    viewer.src = '';
+    rootNode = undefined;
+    rootTransform = undefined;
+
     var client = new Sketchfab( '1.0.0', viewer );
 
-    if ( window.location.host.indexOf( 'sketchfab-local' ) !== -1 )
+    if ( window.location.host.indexOf( 'sketchfab-local' ) !== -1 ) {
         client._url = 'https://sketchfab-local.com/models/XXXX/embed';
+    }
+
+    window.location.search.indexOf( '' );
+
 
     client.init( modelId, {
         camera: 0,
         transparent: 1,
         watermark: 0,
-        //autostart: 1,
-        preload: 1,
-        //cardboard: 1,
+        autostart: 1,
+        //preload: 1,
+        cardboard: getQueryParam( 'cardboard' ),
         //continuousRender: 1,
         success: function onSuccess( api ) {
             //API is ready to use
@@ -134,8 +153,6 @@ var loadModel = function ( callback ) {
     // controls.style.display = 'none';
 };
 
-var rootTransform;
-var rootNode;
 var getNodeList = function () {
 
     if ( clientApi.getRootMatrixNode ) {
@@ -165,10 +182,11 @@ var getNodeList = function () {
     } );
 
     // Start
-    track();
+    //track();
 };
+//////// Sketchfab
 
-
+////////// Main 
 function start() {
     if ( localMediaStream ) {
         localMediaStream.getTracks().forEach( function ( track ) {
@@ -199,9 +217,12 @@ function start() {
             //videoElement.srcObject = stream;
             videoElement.controls = false;
             localMediaStream = stream;
+            if ( urlIdsList.length === 1 ) {
 
-            loadModel( getNodeList );
-
+                loadModel( getNodeList );
+            } else {
+                //track();
+            }
         }, errorCallback );
     } else if ( navigator.mediaDevices.getUserMedia ) {
 
@@ -219,17 +240,20 @@ function start() {
                 videoElement.srcObject = stream;
                 videoElement.controls = false;
                 localMediaStream = stream;
+                if ( urlIdsList.length === 1 ) {
 
-                loadModel( getNodeList );
-
+                    loadModel( getNodeList );
+                } else {
+                    //track();
+                }
                 // Refresh button list in case labels have become available
                 return navigator.mediaDevices.enumerateDevices();
             } )
             .then( gotDevices )
             .catch( errorCallback );
     }
-}
 
+}
 videoSelect.onchange = start;
 
 
@@ -249,50 +273,178 @@ startButton.addEventListener( 'click', function () {
         } );
     }
 }, false );
+////////// Main
 
+
+
+///////// AR Markers
 var intervalId;
 
 stopButton.addEventListener( 'click', function () {
-    clearInterval( intervalId );
+    window.clearInterval( intervalId );
 }, false );
 
 
-var sizeX = 320;
-var sizeY = 240;
+var sizeX = 640;
+var sizeY = 480;
 var markerWidth = 120;
 var threshold = 128;
-
-
 
 rasterCanvas.width = sizeX;
 rasterCanvas.height = sizeY;
 
+var previousId;
+var rootScale = 100.0;
 
+var markers = {};
+var markerIds = [];
+
+var ARUCO = true;
+
+var raster, param, detector, resultMat, posit, markerCount, marker, imageData;
+
+if ( ARUCO ) {
+
+    detector = new AR.Detector();
+    posit = new POS.Posit( rootScale, sizeX );
+
+} else {
+    raster = new NyARRgbRaster_Canvas2D( rasterCanvas );
+    param = new FLARParam( sizeX, sizeY );
+    detector = new FLARMultiIdMarkerDetector( param, markerWidth );
+    resultMat = new NyARTransMatResult();
+    detector.setContinueMode( true );
+}
+
+var ctxt = rasterCanvas.getContext( '2d' );
+
+// 
+var OSG = window.OSG;
+var osg = OSG.osg;
+var adjustRotation = osg.Matrix.makeRotate( Math.PI, 1.0, 0.0, 0.0, osg.Matrix.create() );
+
+// useful to reinitialise sensor filter 
+var oldTarget;
+var poseFilter;
+
+//attempt at kalman filtering
+//poseFilter = new PoseFilter();
 
 var track = function () {
 
+    // TODO use Timer ?
+    if ( videoElement.readyState === videoElement.HAVE_ENOUGH_DATA &&
+        ( ( rootTransform && rootNode ) || urlIdsList.length > 1 ) ) {
 
-    var previousId;
-    var markers = {};
-    var markerIds = [];
+        ctxt.drawImage( videoElement, 0, 0, sizeX, sizeY );
+        rasterCanvas.changed = true;
 
-    var raster = new NyARRgbRaster_Canvas2D( rasterCanvas );
-    var param = new FLARParam( sizeX, sizeY );
-    var detector = new FLARMultiIdMarkerDetector( param, markerWidth );
+        if ( ARUCO ) {
+            imageData = ctxt.getImageData( 0, 0, sizeX, sizeY );
+            markers = detector.detect( imageData );
+            markerCount = markers.length;
 
-    var resultMat = new NyARTransMatResult();
-    detector.setContinueMode( true );
+            var targetMarker;
 
-    var ctxt = rasterCanvas.getContext( '2d' );
+            if ( markerCount > 0 ) {
 
-    intervalId = setInterval( function () {
-        if ( rootTransform && rootNode ) {
+                targetMarker = markers[ 0 ];
+                if ( urlIdsList.length > 1 ) {
 
-            ctxt.drawImage( videoElement, 0, 0, sizeX, sizeY );
-            rasterCanvas.changed = true;
+                    var k;
 
-            var markerCount = detector.detectMarkerLite( raster, threshold );
+                    for ( k = 0; k < markerCount; k++ ) {
 
+                        currId = markers[ k ].id;
+                        if ( previousId === currId ) {
+                            targetMarker = markers[ k ];
+                            break;
+                        }
+
+                    }
+
+                    // HERE we switch model if necessary
+                    if ( k === markerCount ) {
+
+                        // taking the last currId
+                        targetMarker = markers[ markerCount - 1 ];
+
+                        // if that id num has a 3D model ?
+                        if ( currId < urlIdsList.length ) {
+                            modelInput.value = urlIdsList[ currId ];
+                            loadModel( getNodeList );
+                            oldTarget = false;
+                        }
+
+                        previousId = currId;
+                        console.log( currId );
+
+                    }
+                }
+
+
+
+                var corners = targetMarker.corners;
+
+                for ( var i = 0, l = corners.length; i < l; i++ ) {
+                    var corner = corners[ i ];
+
+                    corner.x = corner.x - ( sizeX / 2 );
+                    corner.y = ( sizeY / 2 ) - corner.y;
+                }
+
+                var pose = posit.pose( corners );
+
+
+                if ( rootTransform && rootNode ) {
+
+                    if ( poseFilter ) {
+                        if ( !oldTarget ) {
+                            poseFilter.initializePositionFilters( pose.bestTranslation );
+                            poseFilter.initializeRotationFilters( pose.bestRotation );
+                            oldTarget = true;
+                        }
+                        poseFilter.updatePositions( pose.bestTranslation );
+                        poseFilter.updateRotations( pose.bestRotation );
+                    }
+                    var m = rootTransform;
+
+
+                    //pose.bestError, pose.bestRotation, pose.bestTranslation
+                    //pose.alternativeError, pose.alternativeRotation, pose.alternativeTranslation
+                    var r = poseFilter ? poseFilter.getLastRotation() : pose.bestRotation;
+                    var t = poseFilter ? poseFilter.getLastPosition() : pose.bestTranslation;
+                    var s = rootScale;
+
+                    m[ 0 ] = r[ 0 ][ 0 ];
+                    m[ 1 ] = r[ 2 ][ 0 ];
+                    m[ 2 ] = r[ 1 ][ 0 ];
+                    //m[3] = 0;
+
+                    m[ 4 ] = r[ 0 ][ 1 ];
+                    m[ 5 ] = r[ 2 ][ 1 ];
+                    m[ 6 ] = r[ 1 ][ 1 ];
+                    //m[7] = 0;
+
+                    m[ 8 ] = r[ 0 ][ 2 ];
+                    m[ 9 ] = r[ 2 ][ 2 ];
+                    m[ 10 ] = r[ 1 ][ 2 ];
+                    //m[11] = 0;
+
+
+                    m[ 12 ] = t[ 0 ] / 10.0;
+                    m[ 13 ] = t[ 2 ] / 10.0;
+                    m[ 14 ] = t[ 1 ] / 10.0;
+
+                    osg.Matrix.preMult( m, adjustRotation );
+
+                    clientApi.setMatrix( rootNode, m );
+                }
+            }
+
+        } else {
+
+            markerCount = detector.detectMarkerLite( raster, threshold );
             // Go through the detected markers and get their IDs and transformation matrices.
             if ( markerCount > 0 ) {
 
@@ -320,7 +472,7 @@ var track = function () {
                     //console.log(detector.getARCodeIndex(0));
 
                     modelInput.value = urlIdsList[ currId ];
-                    loadModel( getNodeList() );
+                    loadModel( getNodeList );
 
                     previousId = currId;
                 }
@@ -355,10 +507,22 @@ var track = function () {
 
                 clientApi.setMatrix( rootNode, m );
 
-
             }
+
+
+
         }
 
+    }
 
-    }, 15 );
+    //window.requestAnimationFrame( track );
+
 };
+
+// slow interval but high canvas size
+// just need interpolation/prediction
+window.setInterval( track, 80 );
+
+//window.requestAnimationFrame( track );
+
+///////// AR Markers
