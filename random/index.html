@@ -77,9 +77,9 @@
 
     function getRandomModel() {
         onLoadingStart();
-        var max = 100000;
+        var max = 5000;
         var randomOffset = Math.floor(Math.random() * max);
-        var url = 'https://sketchfab.com/v2/models?count=1&sort_by=-likeCount&offset=' + randomOffset;
+        var url = 'https://sketchfab.com/v2/models?count=1&flag=staffpicked&offset=' + randomOffset;
 
         $.ajax({
             url: url,
