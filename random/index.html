@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Random Sketchfab model</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.1/animate.min.css">
+    <style>
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #f2f2f2;
+    }
+    iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .controls {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        width: 64px;
+        height: 64px;
+        -webkit-transform: translate(-50%, 0);
+        -moz-transform: translate(-50%, 0);
+        -ms-transform: translate(-50%, 0);
+        transform: translate(-50%, 0);
+    }
+    .controls button {
+        width: 64px;
+        height: 64px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgba(0,0,0,.8);
+        border: 0;
+        border-radius: 6px;
+        color: #fff;
+        text-align: center;
+        line-height: 64px;
+        font-size: 24px;
+        outline: 0;
+        cursor: pointer;
+    }
+    </style>
+</head>
+
+<body>
+    <iframe width="640" height="360" src="" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
+
+    <div class="controls">
+        <button><i class="fa fa-random"></i></button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-beta1/jquery.min.js"></script>
+    <script>
+    var MAX_ERRORS = 5;
+    var errors = 0;
+
+    function onError() {
+        errors++;
+        if (errors < MAX_ERRORS) {
+            getRandomModel();
+        }
+    }
+
+    function onLoadingStart() {
+        $('button').addClass('animated infinite pulse');
+    }
+    function onLoadingStop(){
+        $('button').removeClass('animated infinite pulse');
+    }
+
+    function getRandomModel() {
+        onLoadingStart();
+        var max = 100000;
+        var randomOffset = Math.floor(Math.random() * max);
+        var url = 'https://sketchfab.com/v2/models?count=1&sort_by=-likeCount&offset=' + randomOffset;
+
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            method: 'GET'
+        }).then(function onSuccess(response){
+            errors = 0;
+            if (response.count === 0) {
+                onError();
+            } else {
+                var model = response.results[0];
+                console.log(response.results[0]);
+                $('iframe').attr('src', model.embedUrl + '?autostart=1');
+                onLoadingStop();
+            }
+        }, onError);
+    }
+    getRandomModel();
+
+    $('button').on('click', function(){
+        $('iframe').attr('src', '');
+        getRandomModel();
+    });
+    </script>
+</body>
+</html>
