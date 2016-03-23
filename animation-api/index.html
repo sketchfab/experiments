@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Animation API</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+    <style media="screen">
+        .controls {
+            pointer-events: none;
+            opacity: .5;
+        }
+        .controls.enabled {
+            pointer-events: auto;
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe id="api-frame" src="" width="640" height="400" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
+    <div class="controls">
+        <button data-action="play">Play</button>
+        <button data-action="pause">Pause</button>
+        <span class="timestamp"></span>
+    </div>
+
+    <!-- Initialize the viewer -->
+    <script type="text/javascript">
+    var iframe = document.getElementById( 'api-frame' );
+    var version = '1.0.0';
+    var urlid = 'f3769a474a714ebbbaca0d97f9b0a5a0';
+    var client = new Sketchfab( version, iframe );
+
+    client.init( urlid, {
+        success: function onSuccess( api ){
+            api.start();
+            api.addEventListener( 'viewerready', function() {
+                onViewerReady(api);
+            } );
+        },
+        error: function onError() {
+            console.log( 'Viewer error' );
+        }
+    } );
+
+    function enableControls() {
+        $('.controls').addClass('enabled');
+    }
+
+    function formatTimestamp( ts ) {
+        var timestamp = Math.floor( ts * 100 );
+        var seconds = Math.floor( timestamp * 0.01 );
+        var hundredth = Math.floor( ( timestamp * 0.01 - seconds ) * 100 );
+        return padLeft(seconds,2) + ':' + padLeft(hundredth,2);
+    }
+
+    function padLeft(str, length) {
+        str = '' + str;
+        var paddingChar = '0';
+        while (str.length < length) {
+            str = paddingChar + str;
+        }
+        return str;
+    }
+
+    function onViewerReady(api) {
+
+        api.getAnimations(function(err, animations){
+            if (animations.length) {
+                enableControls();
+            }
+        });
+
+        $('button[data-action="play"]').on('click', function(){
+            api.play();
+        });
+
+        $('button[data-action="pause"]').on('click', function(){
+            api.pause();
+        });
+
+        // Update timestamp periodically
+        setInterval( function() {
+            api.getCurrentTime( function ( err, time ) {
+                if (!err) {
+                    $('.timestamp').text( formatTimestamp(time) );
+                }
+            } );
+        }, 100 );
+    }
+    </script>
+</body>
+</html>
