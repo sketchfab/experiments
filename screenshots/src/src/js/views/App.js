@@ -128,7 +128,7 @@ var AppView = Backbone.View.extend({
             view[i] = image_data.charCodeAt(i) & 0xff;
         }
         var blob = new Blob([arraybuffer], {
-            type: 'application/octet-stream'
+            type: 'image/png'
         });
 
         var hasSaveAs = !!window.saveAs;
