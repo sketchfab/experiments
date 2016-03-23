@@ -110,12 +110,14 @@ var AppView = Backbone.View.extend({
         this.resizeViewer(width + 'px', height + 'px');
         this.disableControls();
 
-        this.api.getScreenShot(width, width * (width / height), 'image/png', function(err, result) {
-            this.resizeViewer('100%', '100%');
-            this.hideProgress();
-            this.enableControls();
-            this.saveImage(result);
-        }.bind(this));
+        setTimeout(function(){
+            this.api.getScreenShot(width, width * (width / height), 'image/png', function(err, result) {
+                this.resizeViewer('100%', '100%');
+                this.hideProgress();
+                this.enableControls();
+                this.saveImage(result);
+            }.bind(this));
+        }.bind(this), 1000);
     },
 
     saveImage: function(b64Image) {
