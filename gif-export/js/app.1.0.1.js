@@ -17949,6 +17949,10 @@ var BezierEasing = require('bezier-easing');
 
 var Animations = {
 
+    still: function still(camera, i, total) {
+        return camera;
+    },
+
     turntable: function turntable(camera, i, total) {
         var inc = (2 * Math.PI) / total;
         var angle = inc * i;
@@ -18038,7 +18042,8 @@ function ImageSequence(urlid, options) {
         height: options.height || 240,
         duration: duration,
         steps: duration * FPS,
-        format: format
+        format: format,
+        animated: !!options.animated
     };
 
     if (options.callback && isFunction(options.callback)) {
@@ -18091,22 +18096,34 @@ ImageSequence.prototype.initialize = function initialize(iframe, urlid) {
         preload: 1,
         camera: 0,
         overrideDevicePixelRatio: 1,
-        animation_autoplay: 0,
+        // animation_autoplay: 0,
         success: function(api) {
             api.start(function() {
                 api.addEventListener('viewerready', function() {
-                    setTimeout(function() {
-                        self.progress(1, 'Ready');
-                        self.capture(api, self.options.steps, function() {
-                            api.stop();
-                            self.progress(100, 'Finished');
-                            self.cleanup();
 
-                            if (self.clbk && isFunction(self.clbk)) {
-                                self.clbk.call(window, this.images);
-                            }
-                        });
-                    }, 1000);
+                    api.getAnimations( function ( err, animations ) {
+
+                        if (animations.length > 0) {
+                            self.options.duration = animations[0][2];
+                            self.options.steps = Math.floor(self.options.duration * FPS);
+                            self.options.animated = true;
+                            api.pause();
+                        }
+
+                        setTimeout(function() {
+                            self.progress(1, 'Ready');
+                            self.capture(api, self.options.steps, function() {
+                                api.stop();
+                                self.progress(100, 'Finished');
+                                self.cleanup();
+
+                                if (self.clbk && isFunction(self.clbk)) {
+                                    self.clbk.call(window, this.images);
+                                }
+                            });
+                        }, 1000);
+
+                    });
                 });
             });
         },
@@ -18134,10 +18151,19 @@ ImageSequence.prototype.capture = function capture(api, nb, callback) {
             return;
         }
 
+        if (self.options.animated) {
+            var ts = (self.options.steps - i) / self.options.steps * self.options.duration;
+            api.seekTo( ts );
+        }
+
         api.getCameraLookAt(function(err, camera) {
 
             // Camera animation is given by custom function
-            var newCamera = Animations.turntable(camera, nb - i, nb);
+            if (!self.options.animated) {
+                var newCamera = Animations.turntable(camera, nb - i, nb);
+            } else {
+                var newCamera = Animations.still(camera, nb - i, nb);
+            }
 
             api.lookat(
                 newCamera.position,
