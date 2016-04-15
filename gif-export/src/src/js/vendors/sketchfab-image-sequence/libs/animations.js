@@ -4,6 +4,10 @@ var BezierEasing = require('bezier-easing');
 
 var Animations = {
 
+    still: function still(camera, i, total) {
+        return camera;
+    },
+
     turntable: function turntable(camera, i, total) {
         var inc = (2 * Math.PI) / total;
         var angle = inc * i;
