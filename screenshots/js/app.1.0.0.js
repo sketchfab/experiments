@@ -12685,8 +12685,8 @@ var $ = require('jquery');
 var _ = require('underscore');
 var Backbone = require('backbone');
 
-var CAMERA_POLLING_INTERVAL = 500;
-var CAMERA_DELTA = 0.00001;
+var RenderingOptionsView = require('./RenderingOptions');
+var SceneGraphView = require('./SceneGraph');
 
 var sanitizeFilename = function(s) {
     return s.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -12699,9 +12699,6 @@ var AppView = Backbone.View.extend({
     events: {
         'submit .form-load': 'onLoadModelClick',
         'submit .form-options': 'onTakeScreenshotClick',
-        'click [data-action="setCamera"]': 'setCamera',
-        'click [data-action="exportCamera"]': 'onExportCameraClick',
-        'click [data-action="importCamera"]': 'onImportCameraClick'
     },
 
     initialize: function() {
@@ -12709,6 +12706,9 @@ var AppView = Backbone.View.extend({
         this.iframe = this.$el.find('#viewer-frame').get(0);
         this.client = new Sketchfab(version, this.iframe);
         this.filename = 'screenshot.png';
+
+        this._renderingOptionsView = new RenderingOptionsView();
+        this._sceneGraphView = new SceneGraphView();
     },
 
     onLoadModelClick: function(e) {
@@ -12743,8 +12743,6 @@ var AppView = Backbone.View.extend({
                 //Can't find model info
             }.bind(this)
         );
-
-        this.startCameraPolling(100);
     },
 
     getModelInfo: function(urlid) {
@@ -12761,13 +12759,15 @@ var AppView = Backbone.View.extend({
     },
 
     enableControls: function() {
+        this._renderingOptionsView.setApi(this.api);
+        this._sceneGraphView.setApi(this.api);
+
         this.$el.find('.options').addClass('active');
     },
 
     disableControls: function() {
         this.$el.find('.options').removeClass('active');
     },
-
 
     showProgress: function() {
         this.$el.find('.loader').addClass('active');
@@ -12831,78 +12831,85 @@ var AppView = Backbone.View.extend({
         height = Math.min(height, 4096);
 
         this.takeScreenshot(width, height);
+    }
+});
+
+module.exports = AppView;
+
+},{"./RenderingOptions":7,"./SceneGraph":8,"backbone":1,"jquery":2,"underscore":3}],7:[function(require,module,exports){
+'use strict';
+
+var $ = require('jquery');
+var _ = require('underscore');
+var Backbone = require('backbone');
+
+var RenderingOptions = Backbone.View.extend({
+
+    el: '#rendering-panel',
+
+    events: {
+        'change input[name="postprocessing"]': 'onPostProcessingChange',
+        'change #settings-fov': 'onFovChange',
+        'click [data-action="exportCamera"]': 'onExportCameraClick',
+        'click [data-action="importCamera"]': 'onImportCameraClick',
     },
 
-    startCameraPolling: function(interval) {
-        this.$cameraPositionX = this.$el.find('input[name="cameraPositionX"]');
-        this.$cameraPositionY = this.$el.find('input[name="cameraPositionY"]');
-        this.$cameraPositionZ = this.$el.find('input[name="cameraPositionZ"]');
-
-        this.$cameraTargetX = this.$el.find('input[name="cameraTargetX"]');
-        this.$cameraTargetY = this.$el.find('input[name="cameraTargetY"]');
-        this.$cameraTargetZ = this.$el.find('input[name="cameraTargetZ"]');
-
-        this.cameraTimer = setInterval(this.pollCamera.bind(this), interval);
+    initialize: function(options) {
+        this.api = null;
     },
 
-    pollCamera: function() {
-        if (!this.api || !this.api.getCameraLookAt) {
+    setApi: function(api) {
+        this.api = api;
+
+        this.api.getPostProcessing( function(settings){
+            if (settings.enable) {
+                $('input[name="postprocessing"]').prop('checked', settings.enable);
+            }
+        });
+    },
+
+    onPostProcessingChange: function(e) {
+
+        if (!this.api) {
             return;
         }
 
-        this.api.getCameraLookAt(function(err, camera) {
-
-            this._camera = camera;
-
-            this.$cameraPositionX.val(parseFloat(camera.position[0]).toFixed(5));
-            this.$cameraPositionY.val(parseFloat(camera.position[1]).toFixed(5));
-            this.$cameraPositionZ.val(parseFloat(camera.position[2]).toFixed(5));
-
-            this.$cameraTargetX.val(parseFloat(camera.target[0]).toFixed(5));
-            this.$cameraTargetY.val(parseFloat(camera.target[1]).toFixed(5));
-            this.$cameraTargetZ.val(parseFloat(camera.target[2]).toFixed(5));
-        }.bind(this));
+        this.api.setPostProcessing( {
+            enable: $(e.target).is(':checked'),
+        } );
     },
 
-    setCamera: function(e) {
-        e.preventDefault();
-        var $target = $(e.target);
-        var angle = $target.val();
+    onFovChange: function(e) {
 
-        var cameras = {
-            'front': {
-                position: [0.0, -5.0, 0.0],
-                target: [0.0, 0.0, 0.0]
-            },
-            'back': {
-                position: [0.0, -5.0, 0.0],
-                target: [0.0, 0.0, 0.0]
-            },
-            'left': {
-                position: [-5, 0, 0],
-                target: [0, 0, 0]
-            },
-            'right': {
-                position: [5, 0, 0],
-                target: [0, 0, 0]
-            }
+        if (!this.api) {
+            return;
         }
-        console.log(cameras[angle]);
-        this.api.setCameraLookAt(
-            cameras[angle].position,
-            cameras[angle].target,
-            0.1
-        );
+
+        var fov = Math.min( Math.max(1, $(e.target).val()), 179);
+        this.api.setFov( fov );
     },
 
     onExportCameraClick: function(e) {
         e.preventDefault();
-        var win = window.open('', 'camera-export');
-        win.document.write('<pre>' + JSON.stringify(this._camera, null, 4) + '</pre>');
+
+        if (!this.api) {
+            return;
+        }
+
+        this.api.getCameraLookAt(function(err, camera) {
+            this._camera = camera;
+            var win = window.open('', 'camera-export');
+            win.document.write('<pre>' + JSON.stringify(this._camera, null, 4) + '</pre>');
+        });
     },
 
     onImportCameraClick: function(e) {
         e.preventDefault();
+
+        if (!this.api) {
+            return;
+        }
+
         var camera;
         try {
             camera = JSON.parse(window.prompt());
@@ -12918,9 +12925,115 @@ var AppView = Backbone.View.extend({
                 0.1
             );
         }
-    }
+    },
 });
 
-module.exports = AppView;
+module.exports = RenderingOptions;
+
+},{"backbone":1,"jquery":2,"underscore":3}],8:[function(require,module,exports){
+'use strict';
+
+var $ = require('jquery');
+var _ = require('underscore');
+var Backbone = require('backbone');
+
+var SceneGraphView = Backbone.View.extend({
+
+    el: '#scene-panel',
+
+    events: {
+        'click li[data-id]': 'toggleNode',
+    },
+
+    initialize: function() {
+        this.api = null;
+        this.hidden = [];
+    },
+
+    setApi: function(api) {
+        this.api = api;
+        this.render();
+    },
+
+    render: function() {
+
+        if (!this.api) {
+            return this;
+        }
+
+        this.api.getSceneGraph(function(err, result) {
+
+            if (err) {
+                console.log('Error getting nodes');
+                return;
+            }
+
+            console.log(result);
+
+            function renderChildren(node) {
+                var nodes = [];
+                for (var i = 0, l = node.children.length; i < l; i++) {
+                    nodes.push(renderNode(node.children[i]));
+                }
+                return '<ul>' + nodes.join('') + '</ul>';
+            }
+
+            function renderNode(node) {
+
+                var icons = {
+                    'Group': 'fa fa-folder',
+                    'Geometry': 'fa fa-cube',
+                    'MatrixTransform': 'fa fa-arrows-alt'
+                }
+
+                var out = '';
+
+                out += '<li data-type="' + node.type + '" data-id="' + node.instanceID + '">';
+
+                out += '<i class="icon ' + icons[node.type] + '" title="' + node.type + '"></i> ';
+
+                out += '<span>' + (node.name ? node.name : ('(' + node.type + ')')) + '</span>';
+
+                if (node.children && node.children.length) {
+                    out += renderChildren(node);
+                }
+
+                out += '</li>';
+
+                return out;
+            }
+
+            var out = '<ul>' + renderNode(result) + '</ul>';
+            this.$el.find('.objects').html(out);
+
+        }.bind(this));
+
+        return this;
+    },
+
+    toggleNode: function(e) {
+
+        if (!this.api) {
+            return this;
+        }
+
+        e.stopPropagation();
+        var $target = $(e.currentTarget);
+
+        var id = parseInt($target.attr('data-id'), 10);
+
+        if (this.hidden[id]) {
+            this.api.show(id);
+            this.hidden[id] = false;
+            $target.removeClass('hidden');
+        } else {
+            this.api.hide(id);
+            this.hidden[id] = true;
+            $target.addClass('hidden');
+        }
+    },
+});
+
+module.exports = SceneGraphView;
 
 },{"backbone":1,"jquery":2,"underscore":3}]},{},[5]);

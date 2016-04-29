@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Screenshots</title>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300|Titillium+Web:700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="style/app.1.0.0.css">
 </head>
 
@@ -19,42 +20,81 @@
 
     <div class="main">
         <div class="viewer">
-            <iframe src="" id="viewer-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
+            <div class="ratio">
+                <div class="ratio-inner">
+                    <iframe src="" id="viewer-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
+                </div>
+            </div>
             <div class="loader"></div>
         </div>
         <div class="options">
-            <form action="" class="form-options">
-                <div>
-                    <label>Resolution <small>(max 4096×4096)</small>:</label><br>
-                    <input type="text" size="4" value="1920" placeholder="width" name="width" title="Width. Max: 4096"> ×
-                    <input type="text" size="4" value="1080" placeholder="height" name="height" title="Height. Max: 4096">
+
+            <form action="" class="form-options panel" id="render-panel">
+                <div class="panel-content">
+                    <button type="submit" class="btn btn-primary">Render screenshot</button>
                 </div>
-                <div>
-                    <button type="submit">Take screenshot</button>
-                </div>
-                <p>
-                    <a target="_blank" href="https://help.sketchfab.com/hc/en-us/articles/203509907-Share-Embed-Online">Need to embed this model?</a>
-                </p>
             </form>
 
-            <form class="camera-settings">
-                <label>Camera position</label><br>
-                <input type="text" size="12" value="" name="cameraPositionX" readonly>
-                <input type="text" size="12" value="" name="cameraPositionY" readonly>
-                <input type="text" size="12" value="" name="cameraPositionZ" readonly>
-                <br>
-                <label>Camera target</label><br>
-                <input type="text" size="12" value="" name="cameraTargetX" readonly>
-                <input type="text" size="12" value="" name="cameraTargetY" readonly>
-                <input type="text" size="12" value="" name="cameraTargetZ" readonly>
-                <!-- <br>
-                <button type="button" data-action="setCamera" value="front">Front</button>
-                <button type="button" data-action="setCamera" value="back">Back</button>
-                <button type="button" data-action="setCamera" value="left">Left</button>
-                <button type="button" data-action="setCamera" value="right">Right</button> -->
-                <button type="button" data-action="exportCamera" value="export">Export camera</button>
-                <button type="button" data-action="importCamera" value="import">Import camera</button>
-            </form>
+            <div class="panel" id="rendering-panel">
+                <h2 class="panel-title">
+                    <i class="fa fa-cog"></i>
+                    Options
+                </h2>
+
+                <form class="panel-content">
+
+                    <div class="field">
+                        <label class="field-label">
+                            Resolution
+                        </label>
+                        <div class="field-control">
+                            <input type="text" size="4" value="1920" placeholder="width" name="width" title="Width. Max: 4096"> ×
+                            <input type="text" size="4" value="1080" placeholder="height" name="height" title="Height. Max: 4096">
+                            <small>(4096 max)</small>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label" for="settings-postprocessing">
+                            Post processing
+                        </label>
+                        <div class="field-control">
+                            <input type="checkbox" name="postprocessing" id="settings-postprocessing">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label">
+                            Camera position
+                        </label>
+                        <div class="field-control">
+                            <button type="button" data-action="importCamera" value="import">Import</button>
+                            <button type="button" data-action="exportCamera" value="export">Export</button>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label" for="settings-fov">
+                            Camera FOV
+                        </label>
+                        <div class="field-control">
+                            <input name="number" type="text" size="4" value="0" id="settings-fov">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel" id="scene-panel">
+                <h2 class="panel-title">
+                    <i class="fa fa-list"></i>
+                    Scene
+                </h2>
+
+                <div class="panel-content">
+                    <div class="objects">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
