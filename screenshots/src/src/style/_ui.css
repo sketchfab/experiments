@@ -1,11 +1,18 @@
 .panel {
-    padding: 15px;
 
-    border-radius: 4px;
-
-    background: #ffffff;
-    box-shadow: 0 1px 5px 0 rgba(85, 85, 85, 0.15);
 }
+    .panel-title {
+        padding: 8px 20px;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 200;
+        text-transform: uppercase;
+        color: #FFF;
+        background: #222;
+    }
+    .panel-content {
+        padding: 20px;
+    }
 
 .btn {
     display: inline-block;
@@ -45,3 +52,16 @@
     background: #e7e7e7;
     cursor: default;
 }
+
+.field {
+    display:flex;
+    border-bottom: 1px solid #444;
+    padding: 8px 0;
+}
+    .field-label {
+        flex: 0 0 40%;
+        font-size: 14px;
+    }
+    .field-content {
+        flex: auto;
+    }

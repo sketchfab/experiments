@@ -6,6 +6,7 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
+    background: #333;
 }
 
 .search {
@@ -33,6 +34,8 @@
         flex: auto;
         position: relative;
         overflow: hidden;
+
+        background: #fff url(../assets/checker.png) repeat center center;
     }
 
     .viewer iframe,
@@ -56,21 +59,49 @@
         pointer-events: auto;
     }
 
-    .options {
-        box-sizing: border-box;
-        flex: none;
-        width: 300px;
-        padding: 20px;
+/**
+ * Rendering options
+ ******************************************************************************/
 
-        pointer-events: none;
-        opacity: .5;
-    }
-    .options.active {
-        pointer-events: auto;
-        opacity: 1;
-    }
+.options {
+    box-sizing: border-box;
+    flex: none;
+    width: 360px;
 
-    .options a {
-        font-size: 13px;
-        color: #1CAAD9;
+    background: #333;
+    color: #FFF;
+
+    pointer-events: none;
+    opacity: .5;
+    overflow: auto;
+}
+.options.active {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.options a {
+    font-size: 13px;
+    color: #1CAAD9;
+}
+
+/**
+ * Scene graph
+ ******************************************************************************/
+.objects {
+    font-size: 12px;
+}
+    .objects ul {
+        margin: 0;
+        padding: 0 0 0 10px;
+        list-style: none;
     }
+    .objects li {
+        margin: 0;
+        cursor: pointer;
+        line-height: 24px;
+    }
+.hidden {
+    color: #CCC;
+    text-decoration: line-through;
+}
