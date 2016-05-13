@@ -7,7 +7,6 @@
     var model = 'https://sketchfab.com/models/93166cb1877f4895a91411334460898b/embed?autostart=1';
     var materials = {};
     var domain = 'https://sketchfab-labs.s3.amazonaws.com/';
-    var url = domain + '?prefix=materials';
 
     function start() {
         var html = '<iframe width="640" height="480" src="' + model + '" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>';
@@ -19,6 +18,28 @@
     function applyMaterial( id ) {
         var iframeURL = model + '#' + materials[ id ].params;
         $( 'iframe' ).attr( 'src', iframeURL );
+    }
+
+    function resolveLink( id, callback ) {
+        var material = materials[ id ];
+
+        if (material.link === undefined) {
+            $.get( materials[id].linkFile ).then(function(response){
+                var matches = response.match(/https+:\/\/\S+/);
+                if (matches.length) {
+                    var link = matches[0];
+                    material.link = link;
+                    callback(link);
+                } else {
+                    callback(null);
+                }
+            }, function(error){
+                console.error(error);
+                callback(null);
+            });
+        } else {
+            callback(material.link);
+        }
     }
 
     function renderMaterialList() {
@@ -42,6 +63,7 @@
     }
 
     function fetchMaterials() {
+        var url = domain + '?prefix=materials';
         return $.get( url )
             .done( function ( materialListXML ) {
                 var filesXML = $( materialListXML ).find( 'Key' );
@@ -98,6 +120,10 @@
                             materials [ materialName ][ 'thumbnail' ] = file;
                         }
 
+                        if ( file.match(/\.url$/)) {
+                            materials[materialName]['linkFile'] = file;
+                        }
+
                     } );
 
                     if ( !hasAO )
@@ -119,6 +145,13 @@
             var $target = $(e.currentTarget);
             var materialId = $target.attr('data-material');
             applyMaterial( materialId );
+            resolveLink( materialId, function(link){
+                var out = '<h1>' + materialId + '</h1>';
+                if (link) {
+                    out += '<a href="' + link + '" target="_blank">Download on Substance Share</a>';
+                }
+                $('.material-selected').html(out);
+            } );
             onLoadingStart();
             setTimeout(onLoadingStop, 1000);
         });
