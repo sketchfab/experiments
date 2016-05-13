@@ -24,7 +24,11 @@
     function renderMaterialList() {
         var out = '';
         Object.keys( materials ).forEach( function ( materialName ) {
-            out += '<li class="material" data-material="' + materialName + '">' + materialName + '</li>';
+            if (materials[materialName].thumbnail) {
+                out += '<li class="material" data-material="' + materialName + '"><img src="' + materials[materialName].thumbnail + '" alt="' + materialName + '"></li>';
+            } else {
+                out += '<li class="material" data-material="' + materialName + '"><span>' + materialName + '</span></li>';
+            }
         });
         $( '.materials' ).html(out);
     }
@@ -88,6 +92,10 @@
                         if ( file.match( 'Roughness' ) ) {
                             urlParams.push( 'material_roughness=' + file );
                             return;
+                        }
+
+                        if ( file.match( 'Thumbnail.jpg' ) ) {
+                            materials [ materialName ][ 'thumbnail' ] = file;
                         }
 
                     } );

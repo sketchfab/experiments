@@ -68,15 +68,20 @@ body {
     .material {
         box-sizing: border-box;
         flex: 0 1 48%;
-        padding: 8px;
         margin: 1%;
         border-radius: 3px;
-        background: #1CAAD9;
+        background: #000;
         cursor: pointer;
+        transition: transform 0.2s;
     }
-    .material:hover {
-        background: #1C88BB;
-    }
+        .material:hover {
+            transform: scale(1.05);
+        }
+        .material img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
 
 .loading {
     position: absolute;
