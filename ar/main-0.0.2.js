@@ -54,6 +54,12 @@ function gotDevices( deviceInfos ) {
         if ( deviceInfo.kind === 'videoinput' ) {
             option.text = deviceInfo.label || 'camera ' + ( videoSelect.length + 1 );
             videoSelect.appendChild( option );
+
+            if ( option.text.indexOf( 'back' ) !== -1 ) {
+                value = option.value;
+            }
+
+
         } else {
             console.log( 'Some other kind of source/device: ', deviceInfo );
         }
@@ -328,7 +334,114 @@ var oldTarget;
 var poseFilter;
 
 //attempt at kalman filtering
-//poseFilter = new PoseFilter();
+// poseFilter = new PoseFilter();
+
+
+//pose.bestError, pose.bestRotation, pose.bestTranslation
+//pose.alternativeError, pose.alternativeRotation, pose.alternativeTranslation
+var cornersToPoseAruco = function ( corners ) {
+
+    for ( var i = 0, l = corners.length; i < l; i++ ) {
+        var corner = corners[ i ];
+
+        corner.x = corner.x - ( sizeX / 2 );
+        corner.y = ( sizeY / 2 ) - corner.y;
+    }
+
+    return posit.pose( corners );
+};
+
+var markersToPoseAruco1 = function ( markers, pose ) {
+
+    var l = markers.length;
+    if ( l === 0 ) return;
+
+    var k, i;
+
+    var currPose = cornersToPoseAruco( markers[ 0 ].corners );
+
+    for ( k = 0; k < 3; k++ ) {
+        pose.translation[ k ] = currPose.bestTranslation[ k ];
+    }
+    for ( k = 0; k < 3; k++ ) {
+        for ( i = 0; i < 3; i++ ) {
+            pose.rotation[ k ][ i ] = currPose.bestRotation[ k ][ i ];
+        }
+    }
+    var currMarker;
+
+    for ( var p = 1; p < l; p++ ) {
+
+        currPose = cornersToPoseAruco( markers[ p ].corners );
+
+        //for ( k = 0; k < 3; k++ ) {
+        //    pose.translation[ k ] += currPose.bestTranslation[ k ];
+        //}
+        for ( k = 0; k < 3; k++ ) {
+            for ( i = 0; i < 3; i++ ) {
+                pose.rotation[ k ][ i ] += currPose.bestRotation[ k ][ i ];
+            }
+        }
+
+    }
+
+    //for ( k = 0; k < 3; k++ ) {
+    //    pose.translation[ k ] /= l;
+    //}
+    for ( k = 0; k < 3; k++ ) {
+        for ( i = 0; i < 3; i++ ) {
+            pose.rotation[ k ][ i ] /= l;
+        }
+    }
+
+};
+
+var markersToPoseAruco2 = function ( markers, pose ) {
+
+    var l = markers.length;
+    if ( l === 0 ) return;
+
+    var cornersTotal = [];
+
+    var k, i, p;
+
+    for ( p = 0; p < l; p++ ) {
+
+        var corners = markers[ p ].corners;
+
+        for ( i = 0; i < corners.length; i++ ) {
+            var corner = corners[ i ];
+
+            corner.x = corner.x - ( sizeX / 2 );
+            corner.y = ( sizeY / 2 ) - corner.y;
+
+            cornersTotal.push( corner );
+        }
+    }
+
+    var currPose = posit.pose( cornersTotal );
+
+    for ( k = 0; k < 3; k++ ) {
+        pose.translation[ k ] = currPose.bestTranslation[ k ];
+    }
+    for ( k = 0; k < 3; k++ ) {
+        for ( i = 0; i < 3; i++ ) {
+            pose.rotation[ k ][ i ] = currPose.bestRotation[ k ][ i ];
+        }
+    }
+
+};
+
+var markersToPoseAruco = markersToPoseAruco2;
+
+var myPose = {
+    translation: [ 0, 0, 0 ],
+    rotation: [
+        [ 0, 0, 0 ],
+        [ 0, 0, 0 ],
+        [ 0, 0, 0 ]
+    ]
+};
 
 var track = function () {
 
@@ -339,13 +452,19 @@ var track = function () {
         ctxt.drawImage( videoElement, 0, 0, sizeX, sizeY );
         rasterCanvas.changed = true;
 
+        var m;
+
         if ( ARUCO ) {
+
             imageData = ctxt.getImageData( 0, 0, sizeX, sizeY );
             markers = detector.detect( imageData );
             markerCount = markers.length;
 
             var targetMarker;
 
+
+
+            // switch models
             if ( markerCount > 0 ) {
 
                 targetMarker = markers[ 0 ];
@@ -382,38 +501,23 @@ var track = function () {
                     }
                 }
 
-
-
-                var corners = targetMarker.corners;
-
-                for ( var i = 0, l = corners.length; i < l; i++ ) {
-                    var corner = corners[ i ];
-
-                    corner.x = corner.x - ( sizeX / 2 );
-                    corner.y = ( sizeY / 2 ) - corner.y;
-                }
-
-                var pose = posit.pose( corners );
-
+                markersToPoseAruco( markers, myPose );
 
                 if ( rootTransform && rootNode ) {
 
                     if ( poseFilter ) {
                         if ( !oldTarget ) {
-                            poseFilter.initializePositionFilters( pose.bestTranslation );
-                            poseFilter.initializeRotationFilters( pose.bestRotation );
+                            poseFilter.initializePositionFilters( myPose.translation );
+                            poseFilter.initializeRotationFilters( myPose.rotation );
                             oldTarget = true;
                         }
-                        poseFilter.updatePositions( pose.bestTranslation );
-                        poseFilter.updateRotations( pose.bestRotation );
+                        poseFilter.updatePositions( myPose.translation );
+                        poseFilter.updateRotations( myPose.rotation );
                     }
-                    var m = rootTransform;
+                    m = rootTransform;
 
-
-                    //pose.bestError, pose.bestRotation, pose.bestTranslation
-                    //pose.alternativeError, pose.alternativeRotation, pose.alternativeTranslation
-                    var r = poseFilter ? poseFilter.getLastRotation() : pose.bestRotation;
-                    var t = poseFilter ? poseFilter.getLastPosition() : pose.bestTranslation;
+                    var r = poseFilter ? poseFilter.getLastRotation() : myPose.rotation;
+                    var t = poseFilter ? poseFilter.getLastPosition() : myPose.translation;
                     var s = rootScale;
 
                     m[ 0 ] = r[ 0 ][ 0 ];
@@ -480,7 +584,7 @@ var track = function () {
                 // Get the transformation matrix for the detected marker.
                 detector.getTransformMatrix( 0, resultMat );
 
-                var m = rootTransform;
+                m = rootTransform;
 
                 // GOOD for VR
                 // Mirror inverted when AR only
