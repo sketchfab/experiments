@@ -1,0 +1,33 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Varela Round', sans-serif;
+}
+
+#api-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.score {
+    position: absolute;
+    left: 30px;
+    top: 30px;
+    font-size: 36px;
+    color: white;
+    text-shadow: 1px 1px 0 rgba(0,0,0,.5);
+}
+
+.time {
+    position: absolute;
+    right: 30px;
+    top: 30px;
+    font-size: 36px;
+    color: white;
+    text-shadow: 1px 1px 0 rgba(0,0,0,.5);
+}

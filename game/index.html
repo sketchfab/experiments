@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab Game</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" media="screen" title="no title" charset="utf-8">
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
+    <script type="text/javascript" src="https://d1jlf623bx36qa.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+    <script type="text/javascript" src="keymaster.js"></script>
+</head>
+
+<body>
+    <!-- Insert an empty iframe -->
+    <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
+    <div class="score">
+        Score: <span class="score-value">0</span>
+    </div>
+
+    <div class="time">
+        Time: <span class="time-value"></span>
+    </div>
+
+    <!-- Initialize the viewer -->
+    <script type="text/javascript">
+        var iframe = document.getElementById('api-frame');
+        var version = '1.0.0';
+        var urlid = 'c24832a1eaa2452cbd4177dbf3b163aa';
+        var client = new Sketchfab(version, iframe);
+
+        window.score = 0;
+        function updateScore() {
+            document.querySelector('.score-value').innerText = window.score;
+        }
+
+        window.startTime = 0;
+        window.maxTime = 60;
+        function startTimer() {
+            window.startTime = +new Date();
+            window.timer = setInterval(function(){
+                var currentTime = +new Date();
+                var diff = Math.floor((currentTime - window.startTime) / 1000);
+                var remaining = window.maxTime - diff;
+                document.querySelector('.time-value').innerText = remaining;
+
+                if (remaining === 0 ) {
+                    clearInterval(window.timer);
+                    alert("Time is up! Your score is " + window.score);
+                    start();
+                }
+            }, 100);
+        }
+
+        function start() {
+            window.score = 0;
+            updateScore();
+            window.startTime = 0;
+            startTimer();
+        }
+
+        function getNodeByName(map, name) {
+            return _.find(map, {
+                name: name,
+                type: "MatrixTransform"
+            });
+        }
+
+        function loop() {
+            // console.log('.');
+            window.requestAnimationFrame( loop );
+        }
+
+        client.init(urlid, {
+            'ui_infos': 0,
+            'ui_controls': 0,
+            success: function onSuccess(api) {
+                api.start();
+                api.addEventListener('viewerready', function() {
+
+                    // API is ready to use
+                    // Insert your code here
+                    console.log('Viewer is ready');
+                    window.api = api;
+
+                    api.getNodeMap(function(err, nodes) {
+                        if (!err) {
+                            window.gemManager = new GemManager([
+                                new Gem(getNodeByName(nodes, "gem_01")),
+                                new Gem(getNodeByName(nodes, "gem_02")),
+                                new Gem(getNodeByName(nodes, "gem_03")),
+                                new Gem(getNodeByName(nodes, "gem_04")),
+                            ]);
+
+                            window.hero = new Hero(getNodeByName(nodes, "hero"));
+
+                            key('up', function() {
+                                window.hero.moveUp()
+                            });
+                            key('down', function() {
+                                window.hero.moveDown()
+                            });
+                            key('left', function() {
+                                window.hero.moveLeft()
+                            });
+                            key('right', function() {
+                                window.hero.moveRight()
+                            });
+
+                            window.gemManager.spawn();
+                            loop();
+
+                        }
+                    });
+
+
+                });
+            },
+            error: function onError() {
+                console.log('Viewer error');
+            }
+        });
+
+        /**
+         * Gem
+         */
+        function Gem(node) {
+            this.node = node;
+            this.visible = true;
+            this.position = [0, 0, 0];
+
+            this.moveTo([0, 0, 0]);
+        }
+        Gem.prototype.show = function() {
+            this.visible = true;
+            window.api.show(this.node.instanceID);
+        }
+        Gem.prototype.hide = function() {
+            this.visible = false;
+            window.api.hide(this.node.instanceID);
+        }
+        Gem.prototype.moveTo = function(position) {
+            this.position = position;
+            // node, position, duration, easing, callback
+            window.api.translate(this.node.instanceID, this.position, 0);
+        }
+
+        /**
+         * Gem manager
+         */
+        function GemManager( gems ) {
+            this.gems = gems;
+            this.visible = [];
+            this.collisionDelta = 0.4;
+
+            for (var i=0,l=this.gems.length; i<l; i++) {
+                this.gems[i].hide();
+                this.visible[i] = false;
+            }
+        }
+        GemManager.prototype.spawn = function() {
+            var position = [
+                Math.floor(_.random(-10,10)),
+                Math.floor(_.random(-10,10)),
+                1
+            ];
+            this.gems[0].moveTo(position);
+            this.gems[0].show();
+            this.visible[0] = true;
+        }
+        GemManager.prototype.checkHeroPosition = function(hero) {
+            var heroX = hero.position[0];
+            var heroY = hero.position[1];
+            var distance;
+            var offsetX, offsetY;
+
+            for (var i=0,l=this.gems.length; i<l; i++) {
+                offsetX = Math.abs(this.gems[i].position[0] - heroX);
+                offsetY = Math.abs(this.gems[i].position[1] - heroY);
+                distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
+
+                if (distance < this.collisionDelta) {
+                    this.spawn();
+                    window.score++;
+                    updateScore();
+                }
+            }
+        }
+
+        /**
+         * Hero
+         */
+        function Hero(node) {
+            this.node = node;
+            this.speed = 1;
+            this.position = [0, 0, 0];
+        }
+        Hero.prototype.moveTo = function(position) {
+            var x = _.clamp(position[0], -10, 10);
+            var y = _.clamp(position[1], -10, 10);
+            this.position = [x, y, 1];
+
+            window.api.translate(this.node.instanceID, this.position, 0);
+            window.gemManager.checkHeroPosition( this );
+
+            if (!window.timer) {
+                start();
+            }
+        }
+        Hero.prototype.moveLeft = function() {
+            var newPosition = [
+                this.position[0] - this.speed,
+                this.position[1],
+                this.position[2]
+            ]
+            this.moveTo(newPosition);
+        }
+        Hero.prototype.moveRight = function() {
+            var newPosition = [
+                this.position[0] + this.speed,
+                this.position[1],
+                this.position[2]
+            ]
+            this.moveTo(newPosition);
+        }
+        Hero.prototype.moveUp = function() {
+            var newPosition = [
+                this.position[0],
+                this.position[1] + this.speed,
+                this.position[2]
+            ]
+            this.moveTo(newPosition);
+        }
+        Hero.prototype.moveDown = function() {
+            var newPosition = [
+                this.position[0],
+                this.position[1] - this.speed,
+                this.position[2]
+            ]
+            this.moveTo(newPosition);
+        }
+    </script>
+</body>
+
+</html>
