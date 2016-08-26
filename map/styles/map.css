@@ -1,0 +1,43 @@
+.map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-info {
+    position: absolute;
+    left: 50%;
+    width: 80%;
+    bottom: 10px;
+    padding: 10px;
+    background: rgba(0,0,0,.8);
+    color: #fff;
+    transform: translate(-50%, 0);
+    border-radius: 4px;
+    font-size: 12px;
+
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1001;
+}
+.map-info.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.map-info-actions {
+    margin-top: 8px;
+    text-align: right;
+}
+    .map-info-actions button {
+        -webkit-appearance: none;
+        background: transparent;
+        border: 1px solid #fff;
+        border-radius: 2px;
+        font-size: 10px;
+        color: #fff;
+    }

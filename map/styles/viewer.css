@@ -1,0 +1,81 @@
+.viewer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #FFF;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-33%, 0);
+    transition: transform .3s, opacity .3s;
+}
+.viewer.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(0, 0);
+}
+    .viewer-info {
+        box-sizing: border-box;
+        height: 100%;
+        padding: 15px 30px;
+        overflow: auto;
+    }
+
+        .viewer iframe {
+            width: 100%;
+            height: 100%;
+            background: #EEE;
+        }
+
+        .viewer-info h1 {
+            margin: 1em 0 0 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+            .viewer-info h1 a {
+                text-decoration: none;
+                color: #000;
+            }
+        .viewer-meta {
+            margin-bottom: 1em;
+            font-size: 14px;
+            color: #888;
+        }
+        .viewer-description {
+            font-size: 16px;
+            line-height: 1.8;
+            font-family: 'Gentium Basic', serif;
+        }
+        .viewer-description a {
+            color: #1CAAD9;
+        }
+        .viewer-description img {
+            max-width: 100%;
+            height: auto;
+        }
+
+    .viewer .back {
+        -webkit-appearance: none;
+        border: 0;
+        background: 0;
+        padding: 4px;
+        margin-right: 10px;
+        margin-left: -24px;
+        line-height: 24px;
+        opacity: 0.3;
+        cursor: pointer;
+    }
+    .viewer .back:hover {
+        opacity: 1;
+    }
+        .viewer .back img {
+            width: 16px;
+            height: 24px;
+            vertical-align: bottom;
+        }
