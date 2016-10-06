@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab Viewer API example</title>
+    <script type="text/javascript" src="https://d1jlf623bx36qa.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+    <script type="text/javascript" src="AnimationControls.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles.css" media="screen" title="no title">
+</head>
+
+<body>
+    <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+    <div class="controls">
+        <button class="playpause play">
+            <span class="play"><i class="fa fa-play"></i></span>
+            <span class="pause"><i class="fa fa-pause"></i></span>
+        </button>
+        <input class="slider timeSlider" type="range" min="0" max="100" step="0.1" value="0">
+    </div>
+
+    <script type="text/javascript">
+    var iframe = document.getElementById( 'api-frame' );
+    var version = '1.0.0';
+    var urlid = '36e9d3598c554bb69f3d9cd00e161818';
+    var client = new Sketchfab( version, iframe );
+    var playpauseButton = document.querySelector('.playpause');
+    var timeSlider = document.querySelector('.timeSlider');
+    var animationControls;
+    var wasPlaying;
+    var isSeeking;
+
+    client.init( urlid, {
+        ui_controls: 0,
+        success: function onSuccess( api ){
+            api.start();
+            api.addEventListener( 'viewerready', function() {
+
+                animationControls = new AnimationControls( api, {
+                    autoplay: true,
+                    onStateChange: function( isPlaying ) {
+                        playpauseButton.className = "playpause " + (isPlaying ? 'pause' : 'play');
+                    },
+                    onTime: function( time ) {
+                        if (!isSeeking) {
+                            var percentage = 100 * time / animationControls.getDuration();
+                            timeSlider.value = percentage;
+                        }
+                    }
+                } );
+            } );
+        },
+        error: function onError() {
+            console.log( 'Viewer error' );
+        }
+    } );
+
+    playpauseButton.addEventListener('click', function(){
+        animationControls.playPause();
+    });
+
+    timeSlider.addEventListener('change', function(){
+
+        isSeeking = false;
+
+        if (wasPlaying) {
+            animationControls.play();
+        }
+        wasPlaying = undefined;
+    });
+
+    timeSlider.addEventListener('input', function(){
+
+        isSeeking = true;
+
+        var duration = animationControls.getDuration();
+        var time = duration * timeSlider.value / 100;
+        if (animationControls.getState()) {
+            wasPlaying = true;
+            animationControls.pause();
+        }
+        animationControls.seekTo(time);
+    });
+    </script>
+</body>
+</html>
