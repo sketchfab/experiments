@@ -38,12 +38,11 @@ if (env.BRANCH_NAME == 'master') {
 
       docker.login()
 
-      def cmd = './run.sh deploy_labs_experiments'
-      boolean fetch_creds = true
-      def user = "${ENV}-deployer"
-      def private_key = "./stash/ssh-keys/${ENV}-deployer"
-
-      machines.run(cmd, ENV, fetch_creds, user, private_key)
+      machines.run(cmd: "./run.sh deploy_labs_experiments",
+                   env: ENV,
+                   fetch_creds: true,
+                   ssh_user: "${ENV}-deployer",
+                   private_key: "./stash/ssh-keys/${ENV}-deployer")
 
       // Build successful
       slack.notify('', '#ops', [[
