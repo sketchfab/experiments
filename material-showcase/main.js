@@ -4,7 +4,7 @@
     // globals
     var $ = window.$;
 
-    var model = 'https://sketchfab.com/models/93166cb1877f4895a91411334460898b/embed?autostart=1&material_showcase=1';
+    var model = 'https://sketchfab.com/models/93166cb1877f4895a91411334460898b/embed?autostart=1';
     var materials = {};
     var domain = 'https://sketchfab-labs.s3.amazonaws.com/';
 
@@ -16,7 +16,7 @@
     }
 
     function applyMaterial( id ) {
-        var iframeURL = model + '#' + materials[ id ].params;
+        var iframeURL = model + '#material_showcase=1,' + materials[ id ].params;
         $( 'iframe' ).attr( 'src', iframeURL );
     }
 
