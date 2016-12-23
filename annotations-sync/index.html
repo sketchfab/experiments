@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Annotations sync</title>
+    <link rel="stylesheet" type="text/css" href="../styles/sketchfab.css">
     <link rel="stylesheet" type="text/css" href="style/app.css">
     <style type="text/css">
     body {
@@ -13,9 +14,9 @@
     .slides {
         position: absolute;
         left: 61.8%;
-        top: 0;
+        top: 60px;
         width: 38.2%;
-        height: 100%;
+        height: calc(100% - 60px);
         overflow: auto;
         background: #ffffff;
     }
@@ -38,6 +39,15 @@
 </head>
 
 <body>
+    <header class="header">
+        <h1 class="header--logo">
+            <a href="../">
+                <img src="../assets/sketchfab-logo.svg" alt="Sketchfab" width="120" class="header--image">
+                <span>Labs Experiments</span>
+            </a>
+        </h1>
+    </header>
+
 <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
 
 <div class="slides">
