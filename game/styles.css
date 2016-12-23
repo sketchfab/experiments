@@ -10,14 +10,14 @@ body {
 #api-frame {
     display: block;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 60px);
     border: 0;
 }
 
 .score {
     position: absolute;
     left: 30px;
-    top: 30px;
+    top: 90px;
     font-size: 36px;
     color: white;
     text-shadow: 1px 1px 0 rgba(0,0,0,.5);
@@ -26,7 +26,7 @@ body {
 .time {
     position: absolute;
     right: 30px;
-    top: 30px;
+    top: 90px;
     font-size: 36px;
     color: white;
     text-shadow: 1px 1px 0 rgba(0,0,0,.5);
