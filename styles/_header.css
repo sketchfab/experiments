@@ -1,0 +1,28 @@
+.header {
+    display: flex;
+    height: 24px;
+    padding: 18px 40px;
+
+    background: #ffffff;
+    box-shadow: 0 1px 5px rgba(85,85,85,.15);
+    line-height: 24px;
+}
+
+.header--logo {
+    margin: 0;
+    font-family: "Titillium Web", sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: #1CAAD9;
+}
+
+.header--image {
+    vertical-align: bottom;
+}
+
+.header a {
+    text-decoration: none;
+}
+.header a:hover span {
+    color: #555;
+}
