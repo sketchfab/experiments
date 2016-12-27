@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>360 Video</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="../styles/sketchfab.css">
     <link rel="stylesheet" type="text/css" href="style/app.css">
     <script type="text/javascript" src="https://d2f25wgezub9nf.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
     <script type="text/javascript" src="vendors/skfb-api-plus/augment.js"></script>
@@ -13,6 +14,16 @@
 </head>
 
 <body>
+    <header class="header">
+        <h1 class="header--logo">
+            <a href="../">
+                <img src="../assets/sketchfab-logo.svg" alt="Sketchfab" width="120" class="header--image">
+                <span>Labs Experiments</span>
+            </a>
+        </h1>
+    </header>
+
+
 <iframe id="api-frame" width="640" height="400" style="border:0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
 <div class="selector">
     <label for="videourl">Enter a 360° video URL:</label> (or choose one of these:
