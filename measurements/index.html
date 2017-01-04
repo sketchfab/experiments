@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Measurements</title>
+    <link rel="stylesheet" href="./app.css">
+    <script type="text/javascript" src="./lodash.core.js"></script>
+    <script type="text/javascript" src="https://d1jlf623bx36qa.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <div class="viewer">
+            <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+            <svg class="ruler" width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <line x1="0" y1="0" x2="-1" y2="-1" stroke-width="2" stroke="white"/>
+            </svg>
+            <span class="marker markerA"></span>
+            <span class="marker markerB"></span>
+        </div>
+        <div class="panel">
+            <p>
+                Click on two points on the model to measure the distance.<br>
+                Note: 3D models are unitless.
+            </p>
+            <ul class="values">
+                <li>
+                    <strong class="pointA">Point A:</strong>
+                    <output class="positionA"></output>
+                </li>
+                <li>
+                    <strong class="pointB">Point B:</strong>
+                    <output class="positionB"></output>
+                </li>
+                <li class="distanceValue">
+                    <strong>Distance:</strong>
+                    <output class="distance"></output>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Initialize the viewer -->
+    <script type="text/javascript">
+    var iframe = document.getElementById( 'api-frame' );
+    var version = '1.0.0';
+    var urlid = '60e82183b5fd49f5bfb60c8b78e5cbe3';
+    var client = new Sketchfab( version, iframe );
+
+    var points = [];
+    var markers = [];
+
+    function distance3d(a, b) {
+        return Math.sqrt(
+            Math.pow(a[0] - b[0], 2) +
+            Math.pow(a[1] - b[1], 2) +
+            Math.pow(a[2] - b[2], 2)
+        );
+    }
+
+    client.init( urlid, {
+        success: function onSuccess( api ){
+            api.start();
+            api.addEventListener( 'viewerready', function() {
+
+                startCameraPolling(api, null, function() {
+                    points.length = 0;
+                    markers.length = 0;
+                    render();
+                });
+
+                api.addEventListener( 'click', function(e){
+                    points.push(e.position3D);
+                    markers.push(e.position2D);
+                    render();
+
+                    if (points.length === 2) {
+                        render();
+                        points.length = 0;
+                        markers.length = 0;
+                    }
+                } );
+
+            } );
+        },
+        error: function onError() {
+            console.log( 'Viewer error' );
+        }
+    } );
+
+    function render() {
+        var positionA = document.querySelector('.positionA');
+        var positionB = document.querySelector('.positionB');
+        var distance = document.querySelector('.distance');
+        if (points[0]) {
+            positionA.innerHTML = JSON.stringify(_.values(points[0]), null, 4);
+        } else {
+            positionA.innerHTML = '';
+        }
+        if (points[1]) {
+            positionB.innerHTML = JSON.stringify(_.values(points[1]), null, 4);
+            distance.innerHTML = distance3d(points[0], points[1]);
+        } else {
+            positionB.innerHTML = '';
+            distance.innerHTML = '';
+        }
+
+        var markerA = document.querySelector('.markerA');
+        var markerB = document.querySelector('.markerB');
+        var ruler = document.querySelector('.ruler');
+        var line = document.querySelector('.ruler line');
+        var viewer = document.querySelector('.viewer');
+
+        if (markers[0]) {
+            markerA.style.left = markers[0][0] + 'px';
+            markerA.style.top = markers[0][1] + 'px';
+        } else {
+            markerA.style.left = '-100px';
+            markerA.style.top = '-100px';
+        }
+
+        if (markers[1]) {
+            markerB.style.left = markers[1][0] + 'px';
+            markerB.style.top = markers[1][1] + 'px';
+            ruler.setAttribute('width', viewer.offsetWidth);
+            ruler.setAttribute('height', viewer.offsetHeight);
+            ruler.setAttribute('viewBox', '0 0 ' + viewer.offsetWidth + ' ' + viewer.offsetHeight);
+            line.setAttribute('x1', markers[0][0]);
+            line.setAttribute('y1', markers[0][1]);
+            line.setAttribute('x2', markers[1][0]);
+            line.setAttribute('y2', markers[1][1]);
+        } else {
+            markerB.style.left = '-100px';
+            markerB.style.top = '-100px';
+
+            line.setAttribute('x1', 0);
+            line.setAttribute('y1', 0);
+            line.setAttribute('x2', -1);
+            line.setAttribute('y2', -1);
+        }
+    }
+
+    var timer;
+    var previousCamera;
+    var currentCamera;
+    var CAMERA_DELTA = 0.00001;
+    var isCameraMoving = false;
+
+    function startCameraPolling( api, onCameraIdle, onCameraMove) {
+        var CAMERA_POLLING_INTERVAL = 100;
+        timer = setInterval(function() {
+            api.getCameraLookAt(function(dummy, camera) {
+                currentCamera = camera;
+                onCameraPolled(onCameraIdle, onCameraMove);
+            });
+        }, CAMERA_POLLING_INTERVAL);
+    }
+
+    function onCameraPolled(onCameraIdle, onCameraMove) {
+        var positionDistance = 0;
+        var targetDistance = 0;
+        var isMoving = false;
+
+        if (currentCamera) {
+            if (previousCamera) {
+                positionDistance = distance3d(currentCamera.position, previousCamera.position);
+                targetDistance = distance3d(currentCamera.target, previousCamera.target);
+            }
+            previousCamera = currentCamera;
+
+            var totalDistance = positionDistance + targetDistance;
+            if (totalDistance < CAMERA_DELTA) {
+                if (isCameraMoving) {
+                    isCameraMoving = false;
+                    onCameraIdle && onCameraIdle();
+                }
+            } else {
+                if (!isCameraMoving) {
+                    isCameraMoving = true;
+                    onCameraMove && onCameraMove();
+                }
+            }
+        }
+    }
+    </script>
+</body>
+</html>
