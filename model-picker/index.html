@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Picker</title>
+    <link rel="stylesheet" href="../styles/sketchfab.css">
+    <style>
+    .app {
+        padding: 30px;
+    }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <h1 class="header--logo">
+        <a href="../">
+            <img src="../assets/sketchfab-logo.svg" alt="Sketchfab" width="120" class="header--image">
+            <span>Labs Experiments</span>
+        </a>
+    </h1>
+</header>
+
+<div class="app">
+    <h1>Sketchfab Model Picker</h1>
+    <p>
+        Load models easily in your web applications.<br>
+        Include <a href="SketchfabPicker.js">SketchfabPicker.js</a> in your page.
+    </p>
+    <pre><code>&lt;script type=&quot;text/javascript&quot; src=&quot;SketchfabPicker.js&quot;&gt;&lt;/script&gt;</code></pre>
+    <p>
+        Then call the picker to open a new window.
+    </p>
+<pre><code>
+var picker = new SketchfabPicker();
+picker.pick({
+    success: function(model) {
+        console.log(model);
+    }
+});</code></pre>
+
+    <h2>Demo</h2>
+    <button class="button btn-primary">Pick a model</button>
+    <pre class="result">
+    </pre>
+</div>
+
+<script type="text/javascript" src="SketchfabPicker.js"></script>
+<script type="text/javascript">
+var button = document.querySelector('button');
+var picker = new SketchfabPicker();
+button.addEventListener('click', function(){
+    picker.pick({
+        success: function(model) {
+            console.log(model);
+            var out = document.querySelector('.result');
+            out.innerHTML = JSON.stringify( model, null, 4);
+        }
+    });
+});
+</script>
+</body>
+</html>
