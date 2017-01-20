@@ -1,4 +1,4 @@
-var baseUrl = 'https://labs.sketchfab.com/model-picker/';
+var baseUrl = 'https://labs.sketchfab.com/experiments/model-picker/';
 
 function SketchfabPicker() {
     this.childWindow = null;
