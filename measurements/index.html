@@ -1,187 +1,351 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Measurements</title>
+    <link rel="stylesheet" type="text/css" href="../styles/sketchfab.css">
     <link rel="stylesheet" href="./app.css">
-    <script type="text/javascript" src="./lodash.core.js"></script>
-    <script type="text/javascript" src="https://d1jlf623bx36qa.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
 </head>
 
 <body>
-    <div class="app">
+<header class="header">
+    <h1 class="header--logo">
+        <a href="../">
+            <img src="../assets/sketchfab-logo.svg" alt="Sketchfab" width="120" class="header--image">
+            <span>Labs Experiments</span>
+        </a>
+    </h1>
+</header>
+
+<div class="app">
+    <div class="panel">
         <div class="viewer">
             <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
-            <svg class="ruler" width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <line x1="0" y1="0" x2="-1" y2="-1" stroke-width="2" stroke="white"/>
-            </svg>
-            <span class="marker markerA"></span>
-            <span class="marker markerB"></span>
         </div>
-        <div class="panel">
+        <div class="sidebar">
+
             <p>
-                Click on two points on the model to measure the distance.<br>
-                Note: 3D models are unitless.
+                <button type="button" class="button btn-primary choose-model">Load 3D model</button>
             </p>
-            <ul class="values">
-                <li>
-                    <strong class="pointA">Point A:</strong>
-                    <output class="positionA"></output>
-                </li>
-                <li>
-                    <strong class="pointB">Point B:</strong>
-                    <output class="positionB"></output>
-                </li>
-                <li class="distanceValue">
-                    <strong>Distance:</strong>
-                    <output class="distance"></output>
-                </li>
-            </ul>
+
+            <p>
+                Load a model to start, then click on two points on the model to measure the distance.
+            </p>
+
+            <table class="result">
+                <tbody>
+                    <tr>
+                        <th>Distance</th>
+                        <td class="output"><output class="distance">-</output></td>
+                    </tr>
+                    <tr>
+                        <th>×<input type="number" value="1" name="factor" step="0.1" size="5" min="0"></th>
+                        <td class="output"><output class="distanceConverted">-</output></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p class="notes">
+                Measured distances are unit-less.
+                This experiment was build with the <a href="https://sketchfab.com/developers/viewer">Sketchfab Viewer API</a>.
+                Depending on model scale, camera clipping might occur.
+            </p>
         </div>
     </div>
+</div>
 
-    <!-- Initialize the viewer -->
-    <script type="text/javascript">
-    var iframe = document.getElementById( 'api-frame' );
-    var version = '1.0.0';
-    var urlid = '60e82183b5fd49f5bfb60c8b78e5cbe3';
-    var client = new Sketchfab( version, iframe );
+<script type="text/javascript" src="./lodash.min.js"></script>
+<script type="text/javascript" src="./three.js"></script>
+<script type="text/javascript" src="https://labs.sketchfab.com/experiments/model-picker/SketchfabPicker.js"></script>
+<script type="text/javascript" src="https://d1jlf623bx36qa.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
 
-    var points = [];
-    var markers = [];
+<!-- Initialize the viewer -->
+<script type="text/javascript">
 
-    function distance3d(a, b) {
-        return Math.sqrt(
-            Math.pow(a[0] - b[0], 2) +
-            Math.pow(a[1] - b[1], 2) +
-            Math.pow(a[2] - b[2], 2)
-        );
-    }
+var currentCamera = {
+    position: [ 0, 0, 0 ],
+    target: [ 0, 0, 0 ]
+};
 
-    client.init( urlid, {
-        success: function onSuccess( api ){
-            api.start();
-            api.addEventListener( 'viewerready', function() {
+var picker = new SketchfabPicker();
 
-                startCameraPolling(api, null, function() {
-                    points.length = 0;
-                    markers.length = 0;
-                    render();
-                });
+var btChooseModel = document.querySelector('.choose-model');
+btChooseModel.addEventListener('click', function(){
+    picker.pick({
+        success: function(model) {
+            if ( model.uid ) {
+                Viewer.loadModel(model.uid);
+            }
+        }
+    });
+}, false);
 
-                api.addEventListener( 'click', function(e){
-                    points.push(e.position3D);
-                    markers.push(e.position2D);
-                    render();
+window.addEventListener('resize', _.debounce(function(){
+    Overlay.resize();
+}, 100), true);
 
-                    if (points.length === 2) {
-                        render();
-                        points.length = 0;
-                        markers.length = 0;
-                    }
-                } );
+/**
+ * Viewer
+ ******************************************************************************/
+var Viewer = {
 
+    iframe: document.getElementById( 'api-frame' ),
+    client: null,
+    points: [],
+
+    loadModel: function( urlid ) {
+        Viewer.client = new Sketchfab( '1.0.0', Viewer.iframe );
+        Viewer.client.init( urlid, {
+            camera: 0,
+            success:Viewer.onSuccess,
+            error: Viewer.onError
+        } );
+    },
+
+    onSuccess: function( api ) {
+        api.start();
+        api.addEventListener( 'viewerready', function() {
+
+            api.setFov(40);
+            startCameraPolling( api, currentCamera );
+            api.addEventListener( 'click', function(e){
+
+                if ( Viewer.points.length === 2 ) {
+                    Viewer.points.length = 0;
+                }
+
+                Viewer.points.push( e.position3D );
+
+                if ( Viewer.points.length === 1 ) {
+                    Overlay.setPositionA( Viewer.points[0] );
+                    UI.setPoints( Viewer.points[0], null );
+                }
+
+                if ( Viewer.points.length === 2) {
+                    Overlay.setPositionB( Viewer.points[1] );
+                    UI.setPoints( Viewer.points[0], Viewer.points[1] );
+                }
             } );
-        },
-        error: function onError() {
-            console.log( 'Viewer error' );
-        }
-    } );
 
-    function render() {
-        var positionA = document.querySelector('.positionA');
-        var positionB = document.querySelector('.positionB');
-        var distance = document.querySelector('.distance');
-        if (points[0]) {
-            positionA.innerHTML = JSON.stringify(_.values(points[0]), null, 4);
-        } else {
-            positionA.innerHTML = '';
-        }
-        if (points[1]) {
-            positionB.innerHTML = JSON.stringify(_.values(points[1]), null, 4);
-            distance.innerHTML = distance3d(points[0], points[1]);
-        } else {
-            positionB.innerHTML = '';
-            distance.innerHTML = '';
-        }
+            UI.init();
+            Overlay.init( currentCamera );
+        } );
+    },
 
-        var markerA = document.querySelector('.markerA');
-        var markerB = document.querySelector('.markerB');
-        var ruler = document.querySelector('.ruler');
-        var line = document.querySelector('.ruler line');
+    onError: function() {
+        console.log( 'Error: can not load viewer' );
+    }
+}
+
+/**
+ * UI
+ ******************************************************************************/
+var UI = {
+    distance: 0,
+    factor: 1,
+    pointA: [0,0,0],
+    pointB: [0,0,0],
+
+    init: function() {
+
+        UI.distance = 0;
+        UI.pointA = [0,0,0];
+        UI.pointB = [0,0,0];
+
+        var factorElement = document.querySelector('input[name="factor"]');
+        factorElement.addEventListener('change', function(){
+            var value = parseFloat(factorElement.value);
+            if (!isNaN(value)) {
+                UI.factor = value;
+                UI.renderDistanceConverted();
+            }
+        });
+
+        UI.renderDistance();
+        UI.renderDistanceConverted();
+    },
+
+    setPoints: function( pointA, pointB ) {
+        if (pointA)
+            UI.pointA = pointA;
+
+        if (pointB)
+            UI.pointB = pointB;
+
+        UI.distance = distance3d( UI.pointA, UI.pointB );
+        UI.renderDistance();
+        UI.renderDistanceConverted();
+    },
+    renderDistance: function() {
+        var distanceElement = document.querySelector('.distance');
+        distanceElement.innerHTML = UI.distance.toFixed(2);
+    },
+    renderDistanceConverted: function() {
+        var distanceConvertedElement = document.querySelector('.distanceConverted');
+        distanceConvertedElement.innerHTML = (UI.distance * UI.factor).toFixed(2);
+    }
+};
+
+/**
+ * Overlay
+ ******************************************************************************/
+var Overlay = {
+
+    isInitialized: false,
+    renderer: null,
+    scene: null,
+    camera: null,
+
+    markerA: null,
+    markerB: null,
+
+    currentCamera: null,
+
+    init: function( currentCamera ) {
         var viewer = document.querySelector('.viewer');
+        var iframe = document.querySelector('.viewer iframe');
+        var w = iframe.offsetWidth;
+        var h = iframe.offsetHeight;
 
-        if (markers[0]) {
-            markerA.style.left = markers[0][0] + 'px';
-            markerA.style.top = markers[0][1] + 'px';
-        } else {
-            markerA.style.left = '-100px';
-            markerA.style.top = '-100px';
+        if ( !Viewer.isInitialized ) {
+            Overlay.scene = new THREE.Scene();
+            Overlay.camera = new THREE.PerspectiveCamera( 40, w / h, 0.1, 4000 );
+            Overlay.camera.up = new THREE.Vector3(0,0,1);
+
+            Overlay.renderer = new THREE.WebGLRenderer({ alpha: true });
+            Overlay.renderer.setSize( w, h );
+            viewer.appendChild( Overlay.renderer.domElement );
+
+            Viewer.isInitialized = true;
         }
 
-        if (markers[1]) {
-            markerB.style.left = markers[1][0] + 'px';
-            markerB.style.top = markers[1][1] + 'px';
-            ruler.setAttribute('width', viewer.offsetWidth);
-            ruler.setAttribute('height', viewer.offsetHeight);
-            ruler.setAttribute('viewBox', '0 0 ' + viewer.offsetWidth + ' ' + viewer.offsetHeight);
-            line.setAttribute('x1', markers[0][0]);
-            line.setAttribute('y1', markers[0][1]);
-            line.setAttribute('x2', markers[1][0]);
-            line.setAttribute('y2', markers[1][1]);
-        } else {
-            markerB.style.left = '-100px';
-            markerB.style.top = '-100px';
+        Overlay.clearScene();
+        Overlay.initObjects();
+        Overlay.initCamera( currentCamera );
+        Overlay.render();
+    },
 
-            line.setAttribute('x1', 0);
-            line.setAttribute('y1', 0);
-            line.setAttribute('x2', -1);
-            line.setAttribute('y2', -1);
+    initObjects: function() {
+        var geometryA = new THREE.BoxGeometry( 0.01, 0.01, 0.01 );
+        var materialA = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        Overlay.markerA = new THREE.Mesh( geometryA, materialA );
+        Overlay.scene.add( Overlay.markerA );
+
+        var geometryB = new THREE.BoxGeometry( 0.01, 0.01, 0.01 );
+        var materialB = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+        Overlay.markerB = new THREE.Mesh( geometryB, materialB );
+        Overlay.scene.add( Overlay.markerB );
+
+        Overlay.geometryLine = new THREE.Geometry();
+        Overlay.geometryLine.vertices[0] = new THREE.Vector3( 0, 0, 0 );
+        Overlay.geometryLine.vertices[1] = new THREE.Vector3( 0, 0, 0 );
+        var materialLine = new THREE.LineBasicMaterial({
+            color: 0xff00ff
+        });
+        var line = new THREE.Line( Overlay.geometryLine, materialLine );
+        Overlay.scene.add( line );
+    },
+
+    initCamera: function( currentCamera ) {
+        Overlay.currentCamera = currentCamera;
+        Overlay.camera.position.set( currentCamera.position[0], currentCamera.position[1], currentCamera.position[2] );
+        Overlay.camera.lookAt(new THREE.Vector3( currentCamera.target[0], currentCamera.target[1], currentCamera.target[2] ));
+    },
+
+    clearScene: function() {
+        var obj;
+        for( var i = Overlay.scene.children.length - 1; i >= 0; i--) {
+            obj = Overlay.scene.children[i];
+            Overlay.scene.remove(obj);
         }
+    },
+
+    setPositionA: function( position ) {
+        Overlay.markerA.position.x = position[0];
+        Overlay.markerA.position.y = position[1];
+        Overlay.markerA.position.z = position[2];
+
+        Overlay.geometryLine.vertices[0] = new THREE.Vector3( position[0], position[1], position[2] );
+        Overlay.geometryLine.verticesNeedUpdate = true;
+    },
+
+    setPositionB: function( position ) {
+        Overlay.markerB.position.x = position[0];
+        Overlay.markerB.position.y = position[1];
+        Overlay.markerB.position.z = position[2];
+
+        Overlay.geometryLine.vertices[1] = new THREE.Vector3( position[0], position[1], position[2] );
+        Overlay.geometryLine.verticesNeedUpdate = true;
+    },
+
+    render: function() {
+        requestAnimationFrame( Overlay.render );
+        Overlay.camera.position.set( Overlay.currentCamera.position[0], Overlay.currentCamera.position[1], Overlay.currentCamera.position[2] );
+        Overlay.camera.lookAt(new THREE.Vector3( Overlay.currentCamera.target[0], Overlay.currentCamera.target[1], Overlay.currentCamera.target[2] ));
+
+        var scale = distance3d(Overlay.currentCamera.position, [Overlay.markerA.position.x,Overlay.markerA.position.y,Overlay.markerA.position.z]);
+        Overlay.markerA.scale.x = scale;
+        Overlay.markerA.scale.y = scale;
+        Overlay.markerA.scale.z = scale;
+        Overlay.markerB.scale.x = scale;
+        Overlay.markerB.scale.y = scale;
+        Overlay.markerB.scale.z = scale;
+
+        Overlay.renderer.render( Overlay.scene, Overlay.camera );
+    },
+
+    resize: function() {
+        var iframe = document.querySelector('.viewer iframe');
+        var w = iframe.offsetWidth;
+        var h = iframe.offsetHeight;
+        Overlay.camera.aspect = w/h;
+        Overlay.camera.updateProjectionMatrix();
+        Overlay.renderer.setSize( w, h );
     }
+}
 
-    var timer;
-    var previousCamera;
-    var currentCamera;
-    var CAMERA_DELTA = 0.00001;
-    var isCameraMoving = false;
+/**
+ * distance3d
+ * Computes the euclidean distance between 2 3D points
+ * @param {array} a Array of 3D coordinates
+ * @param {array} b Array of 3D coordinates
+ * @return {float} distance
+ */
+function distance3d(a, b) {
+    return Math.sqrt(
+        Math.pow(a[0] - b[0], 2) +
+        Math.pow(a[1] - b[1], 2) +
+        Math.pow(a[2] - b[2], 2)
+    );
+}
 
-    function startCameraPolling( api, onCameraIdle, onCameraMove) {
-        var CAMERA_POLLING_INTERVAL = 100;
-        timer = setInterval(function() {
-            api.getCameraLookAt(function(dummy, camera) {
-                currentCamera = camera;
-                onCameraPolled(onCameraIdle, onCameraMove);
-            });
-        }, CAMERA_POLLING_INTERVAL);
-    }
+/**
+ * startCameraPolling
+ *
+ * @param {object} api
+ * @param {array} currentCamera Array to update with camera position and target.
+ */
+function startCameraPolling( api, currentCamera ) {
 
-    function onCameraPolled(onCameraIdle, onCameraMove) {
-        var positionDistance = 0;
-        var targetDistance = 0;
-        var isMoving = false;
-
-        if (currentCamera) {
-            if (previousCamera) {
-                positionDistance = distance3d(currentCamera.position, previousCamera.position);
-                targetDistance = distance3d(currentCamera.target, previousCamera.target);
-            }
-            previousCamera = currentCamera;
-
-            var totalDistance = positionDistance + targetDistance;
-            if (totalDistance < CAMERA_DELTA) {
-                if (isCameraMoving) {
-                    isCameraMoving = false;
-                    onCameraIdle && onCameraIdle();
-                }
-            } else {
-                if (!isCameraMoving) {
-                    isCameraMoving = true;
-                    onCameraMove && onCameraMove();
-                }
-            }
+    function onCamera( err, camera ) {
+        if ( camera ) {
+            currentCamera.position[0] = camera.position[0];
+            currentCamera.position[1] = camera.position[1];
+            currentCamera.position[2] = camera.position[2];
+            currentCamera.target[0] = camera.target[0];
+            currentCamera.target[1] = camera.target[1];
+            currentCamera.target[2] = camera.target[2];
         }
+        window.requestAnimationFrame( getCamera );
     }
-    </script>
+
+    function getCamera() {
+        api.getCameraLookAt( onCamera );
+    }
+
+    getCamera();
+}
+</script>
 </body>
 </html>
