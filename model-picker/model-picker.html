@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Picker</title>
+    <link rel="stylesheet" href="../styles/sketchfab.css">
+    <link rel="stylesheet" href="styles/app.css">
+</head>
+
+<body>
+<div class="app">
+    <div class="tabbed">
+        <ul class="tabbed-tabs">
+            <li :class="{'tabbed-tab': true, 'active': selectedTab === 'pick-search'}">
+                <a href="#pick-search" @click="selectTab">Search</a>
+            </li>
+            <li :class="{'tabbed-tab': true, 'active': selectedTab === 'pick-url'}">
+                <a href="#pick-url" @click="selectTab">From URL</a>
+            </li>
+            <!--
+            <li :class="{'tabbed-tab': true, 'active': selectedTab === 'pick-explore'}">
+                <a href="#pick-explore" @click="selectTab">My account</a>
+            </li>
+            -->
+        </ul>
+
+        <div id="pick-search" :class="{'tabbed-content': true, 'active': selectedTab === 'pick-search'}">
+            <form @submit="onSearchSubmit">
+                <label for="q">Search 3D/VR models:</label>
+                <div class="field-bar">
+                    <input type="text" value="" placeholder="" v-model="q" name="q" id="q" autofocus>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+            <ul>
+                <li v-for="model in search.models">
+                    <search-item :model="model" v-on:select="onSearchResultClicked"></search-item>
+                </li>
+            </ul>
+        </div>
+        <div id="pick-url" :class="{'tabbed-content': true, 'active': selectedTab === 'pick-url'}">
+            <form @submit="onUrlSubmit">
+                <label for="url">Enter a Sketchfab URL:</label>
+                <div class="field-bar">
+                    <input type="text" value="" v-model="url" placeholder="https://sketchfab.com/models/…" id="url">
+                    <button type="submit" class="btn btn-primary">Load</button>
+                </div>
+            </form>
+        </div>
+        <div id="pick-explore" :class="{'tabbed-content': true, 'active': selectedTab === 'pick-explore'}">
+            <button type="button">Connect to Sketchfab</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.min.js"></script>
+<script src="js/SearchItem.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
