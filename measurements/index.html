@@ -57,6 +57,7 @@
 
 <script type="text/javascript" src="./lodash.min.js"></script>
 <script type="text/javascript" src="./three.js"></script>
+<script type="text/javascript" src="./page.js"></script>
 <script type="text/javascript" src="https://labs.sketchfab.com/experiments/model-picker/SketchfabPicker.js"></script>
 <script type="text/javascript" src="https://d1jlf623bx36qa.cloudfront.net/api/sketchfab-viewer-1.0.0.js"></script>
 
@@ -75,7 +76,7 @@ btChooseModel.addEventListener('click', function(){
     picker.pick({
         success: function(model) {
             if ( model.uid ) {
-                Viewer.loadModel(model.uid);
+                page( '/models/' + model.uid );
             }
         }
     });
@@ -299,9 +300,13 @@ var Overlay = {
         var iframe = document.querySelector('.viewer iframe');
         var w = iframe.offsetWidth;
         var h = iframe.offsetHeight;
-        Overlay.camera.aspect = w/h;
-        Overlay.camera.updateProjectionMatrix();
-        Overlay.renderer.setSize( w, h );
+        if ( Overlay.camera ) {
+            Overlay.camera.aspect = w/h;
+            Overlay.camera.updateProjectionMatrix();
+        }
+        if ( Overlay.renderer ) {
+            Overlay.renderer.setSize( w, h );
+        }
     }
 }
 
@@ -346,6 +351,17 @@ function startCameraPolling( api, currentCamera ) {
 
     getCamera();
 }
+
+page.base('/measurements');
+page('/', function(){});
+page('/models/:uid', function( route ) {
+    if ( route.params && route.params.uid ) {
+        Viewer.loadModel( route.params.uid );
+    }
+});
+page({
+    hashbang: true
+});
 </script>
 </body>
 </html>
