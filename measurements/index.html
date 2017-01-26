@@ -352,7 +352,7 @@ function startCameraPolling( api, currentCamera ) {
     getCamera();
 }
 
-page.base('/measurements');
+page.base('/experiments/measurements');
 page('/', function(){});
 page('/models/:uid', function( route ) {
     if ( route.params && route.params.uid ) {
