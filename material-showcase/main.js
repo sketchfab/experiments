@@ -4,7 +4,7 @@
     // globals
     var $ = window.$;
 
-    var model = 'https://sketchfab.com/models/93166cb1877f4895a91411334460898b/embed?autostart=1';
+    var model = 'https://sketchfab.com/models/93166cb1877f4895a91411334460898b/embed?material_showcase=1&autostart=1';
     var materials = {};
     var domain = 'https://sketchfab-labs.s3.amazonaws.com/';
 
