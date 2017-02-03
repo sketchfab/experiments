@@ -222,20 +222,24 @@ var Overlay = {
         }
 
         Overlay.clearScene();
-        Overlay.initObjects();
         Overlay.initCamera( currentCamera );
+        Overlay.initObjects();
         Overlay.render();
     },
 
     initObjects: function() {
-        var geometryA = new THREE.BoxGeometry( 0.01, 0.01, 0.01 );
+        // var geometryA = new THREE.BoxGeometry( 0.01, 0.01, 0.01 );
+        var geometryA = new THREE.SphereGeometry( 0.005, 8, 8 );
         var materialA = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
         Overlay.markerA = new THREE.Mesh( geometryA, materialA );
+        Overlay.markerA.frustumCulled = false;
         Overlay.scene.add( Overlay.markerA );
 
-        var geometryB = new THREE.BoxGeometry( 0.01, 0.01, 0.01 );
+        // var geometryB = new THREE.BoxGeometry( 0.01, 0.01, 0.01 );
+        var geometryB = new THREE.SphereGeometry( 0.005, 8, 8 );
         var materialB = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
         Overlay.markerB = new THREE.Mesh( geometryB, materialB );
+        Overlay.markerB.frustumCulled = false;
         Overlay.scene.add( Overlay.markerB );
 
         Overlay.geometryLine = new THREE.Geometry();
@@ -245,6 +249,7 @@ var Overlay = {
             color: 0xff00ff
         });
         var line = new THREE.Line( Overlay.geometryLine, materialLine );
+        line.frustumCulled = false;
         Overlay.scene.add( line );
     },
 
