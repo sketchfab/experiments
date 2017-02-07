@@ -73,7 +73,7 @@ function getLatLon(model) {
     var currentTag;
 
     for (var i=0; i<model.tags.length; i++) {
-        currentTag = model.tags[i];
+        currentTag = model.tags[i].name;
         if (currentTag.indexOf('geo_') === 0 && currentTag.length > longestHash.length) {
             longestHash = currentTag.replace('geo_', '');
         }
@@ -91,18 +91,16 @@ function getModelByUid(uid) {
 }
 
 function fetchModels() {
-    var promise = App.sketchfabSDK.Models.byTag('meta_geo');
-    // var promise = App.sketchfabSDK.Models.all();
+    var url = 'https://api.sketchfab.com/v3/models?sort_by=-createdAt&tags=meta_geo';
+    var promise = $.get(url);
     promise.then(onFetchSuccess);
 }
 
 
 function loadMore() {
     if (state.next) {
-        var promise = App.sketchfabSDK.Models.byTag('meta_geo', state.models.length);
-        // var promise = App.sketchfabSDK.Models.all({
-        //     offset: state.models.length
-        // });
+        var url = 'https://api.sketchfab.com/v3/models?sort_by=-createdAt&tags=meta_geo&cursor=' + state.next;
+        var promise = $.get(url);
         promise.then(onFetchSuccess);
     } else {
         alert('Nothing to load');
@@ -111,7 +109,7 @@ function loadMore() {
 
 function onFetchSuccess(response) {
     console.log(response);
-    state.next = response.next;
+    state.next = response.cursors.next;
     state.models = state.models.concat(response.results.map(function(model){
         return _.extend(model, {
             geo: getLatLon(model)
