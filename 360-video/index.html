@@ -7,10 +7,6 @@
     <link rel="stylesheet" type="text/css" href="../styles/sketchfab.css">
     <link rel="stylesheet" type="text/css" href="style/app.css">
     <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.0.0.js"></script>
-    <script type="text/javascript" src="vendors/skfb-api-plus/augment.js"></script>
-    <script type="text/javascript" src="vendors/skfb-api-plus/qwest.min.js"></script>
-    <script type="text/javascript" src="vendors/skfb-api-plus/gl-matrix.js"></script>
-    <script type="text/javascript" src="vendors/skfb-api-plus/skfb-viewer-plus.js"></script>
 </head>
 
 <body>
@@ -27,10 +23,10 @@
 <iframe id="api-frame" width="640" height="400" style="border:0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
 <div class="selector">
     <label for="videourl">Enter a 360° video URL:</label> (or choose one of these:
-    <a href="https://sketchfab.github.io/experiments/360-video/videos/time-couch.webm">Red Couch</a>,
-    <a href="https://sketchfab.github.io/experiments/360-video/videos/NYT_JR_Moped_Copter.webm">JR in NY</a>)
+    <a href="https://labs.sketchfab.com/experiments/360-video/videos/time-couch.webm">Red Couch</a>,
+    <a href="https://labs.sketchfab.com/experiments/360-video/videos/NYT_JR_Moped_Copter.webm">JR in NY</a>)
     <form action="">
-        <input type="text" value="" id="videourl" name="videourl" placeholder="https://example.org/video.webm" size="80">
+        <input type="text" value="" id="videourl" name="videourl" placeholder="https://example.org/video.webm" size="60">
         <button type="submit">Load video</button>
     </form>
 </div>

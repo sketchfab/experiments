@@ -37,4 +37,5 @@ body {
     .selector input,
     .selector button {
         padding: 8px;
+        color: #555;
     }
