@@ -74,13 +74,18 @@ function getLatLon(model) {
 
     for (var i=0; i<model.tags.length; i++) {
         currentTag = model.tags[i].name;
-        if (currentTag.indexOf('geo_') === 0 && currentTag.length > longestHash.length) {
+        if (currentTag.indexOf('geo_') === 0 && currentTag.length > longestHash.length && currentTag.length <= 16) {
             longestHash = currentTag.replace('geo_', '');
         }
     }
 
     if (longestHash !== '') {
-        return Geohash.decode(longestHash);
+        try {
+            var latlon = Geohash.decode(longestHash);
+            return latlon;
+        } catch( e ) {
+            console.error(e.message, longestHash, model.uid);
+        }
     } else {
         return false;
     }
@@ -108,7 +113,6 @@ function loadMore() {
 }
 
 function onFetchSuccess(response) {
-    console.log(response);
     state.next = response.cursors.next;
     state.models = state.models.concat(response.results.map(function(model){
         return _.extend(model, {
