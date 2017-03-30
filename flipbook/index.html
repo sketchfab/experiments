@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sketchfab Flipbook Generator</title>
+
+    <link rel="stylesheet" type="text/css" href="../styles/sketchfab.css">
+    <style>
+    .generator {
+        margin: 40px;
+        padding: 40px;
+        background: #fff;
+        border-radius: 3px;
+        box-shadow: 0 1px 5px rgba(85,85,85,.15);
+    }
+    .model-info {
+        display: none;
+    }
+    .generator {
+        text-align: center;
+    }
+    .generator-download .loading,
+    .generator-download .success,
+    .generator-download .error {
+        display: none;
+    }
+    .instructions {
+        overflow: hidden;
+        margin: 40px;
+        padding: 40px 0;
+        background: #fff;
+        border-radius: 3px;
+        box-shadow: 0 1px 5px rgba(85,85,85,.15);
+    }
+    .generator h2,
+    .instructions h2 {
+        padding: 0 20px;
+        text-align: center;
+        color: #1CAAD9;
+    }
+    .instructions-step {
+        box-sizing: border-box;
+        padding: 0 20px;
+        width: 33.33333%;
+        float: left;
+        text-align: center;
+        color: #555;
+    }
+
+    .model-info {
+        margin: 20px;
+    }
+
+    #canvas {
+        max-width: 200px;
+        height: auto;
+        box-shadow: 0 1px 5px rgba(85,85,85,.15);
+        cursor: pointer;
+    }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <h1 class="header--logo">
+        <a href="../">
+            <img src="../assets/sketchfab-logo.svg" alt="Sketchfab" width="120" class="header--image">
+            <span>Labs Experiments</span>
+        </a>
+    </h1>
+</header>
+
+<div class="app">
+    <div class="generator">
+        <h2>Make your own flip book</h2>
+        <div class="generator-picker">
+            <button class="pick button btn-primary">Select a scene</button>
+        </div>
+        <div class="generator-download">
+
+            <div class="model-info">
+                <strong class="model-name"></strong> by <span class="model-author"></span>
+            </div>
+
+            <div class="loading">Generating flip book…</div>
+            <div class="success">
+                <div>
+                    <!-- <p>Right-click on the image and "Save Image As":</p> -->
+                    <canvas id="canvas"></canvas>
+                </div>
+                <button class="button btn-primary download">Download A4 format</button>
+            </div>
+            <div class="error">
+                An error occured.
+            </div>
+            <!-- <button class="button btn-primary">Download Letter format</button> -->
+        </div>
+        <div id="out">
+        </div>
+    </div>
+    <div class="instructions">
+        <h2>How to make your flip book</h2>
+
+        <div class="instructions-step">
+            <h3>Print</h3>
+            <p>Use your regular color printer to print the document.<br>Thicker paper usually gives better results.</p>
+        </div>
+        <div class="instructions-step">
+            <h3>Cut</h3>
+            <p>Cut the pages with cisors and stack them in order.</p>
+        </div>
+        <div class="instructions-step">
+            <h3>Assemble</h3>
+            <p>Add a clip or staple to hold the pages together.</p>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://labs.sketchfab.com/experiments/model-picker/SketchfabPicker.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.3/axios.js"></script>
+<script type="text/javascript" src="js/FileSaver.min.js"></script>
+<script type="text/javascript">
+var picker = new SketchfabPicker();
+var out = document.querySelector('#out');
+
+function makeFlipBook(url) {
+
+    onLoading();
+
+    var image = document.createElement('IMG');
+    image.onload = function() {
+        var frameWidth = Math.floor(image.width / 15);
+        var frameHeight = image.height;
+        var frameRatio = frameWidth / frameHeight;
+
+        var dpi = 300;
+        var cm2inches = 0.393701;
+        var canvasWidth = Math.floor(21 * cm2inches * dpi);
+        var canvasHeight = Math.floor(29.7 * cm2inches * dpi);
+        var margin = Math.floor(2 * cm2inches * dpi);
+        var columns = 2;
+        var rows = 7;
+        var cellWidth = ( canvasWidth - 2 * margin ) / columns;
+        var cellHeight = ( canvasHeight - 2 * margin ) / rows;
+        var cellRatio = cellWidth / cellHeight;
+
+        var resizedFrameX;
+        var resizedFrameY;
+        var resizedFrameWidth;
+        var resizedFrameHeight;
+
+        if (cellRatio < frameRatio) {
+            resizedFrameWidth = cellWidth * 0.66;
+            resizedFrameHeight = resizedFrameWidth / frameRatio;
+            resizedFrameX = cellWidth * 0.33;
+            resizedFrameY = (cellHeight - resizedFrameHeight) * 0.5;
+        } else {
+            // compute size for other ratio
+            resizedFrameHeight = cellHeight;
+            resizedFrameWidth = resizedFrameHeight * frameRatio;
+            resizedFrameX = cellWidth - resizedFrameWidth;
+            resizedFrameY = 0;
+        }
+
+        // var canvas = document.createElement('CANVAS');
+        var canvas = document.querySelector('#canvas');
+        var ctx = canvas.getContext('2d');
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+        ctx.fillStyle = 'rgb(255, 255, 255)';
+        ctx.fillRect(0,0,canvasWidth, canvasHeight);
+
+        for (var i = 0; i < columns*rows; i++) {
+            var x = (i % columns) * cellWidth + margin;
+            var y = ( Math.floor( i / columns ) ) * cellHeight + margin;
+
+            ctx.drawImage(image, i * frameWidth, 0, frameWidth, frameHeight, x+resizedFrameX, y+resizedFrameY, resizedFrameWidth, resizedFrameHeight);
+
+            ctx.fillStyle = 'rgb(255, 255, 255)';
+            ctx.strokeRect(x, y, cellWidth, cellHeight);
+            ctx.fillRect(x + 10, y + 10, 40, 40);
+            ctx.fillStyle = 'rgb(0, 0, 0)';
+            var fontSize = 36;
+            var textMargin = 15;
+            ctx.font = fontSize + 'pt sans-serif';
+            ctx.fillText(( i + 1 ), x + textMargin, y + fontSize + textMargin);
+        }
+        out.innerHTML = '';
+
+        setTimeout(onSuccess, 1000);
+    }
+    image.crossOrigin = "Anonymous";
+    image.src = url;
+}
+
+function download() {
+    var canvas = document.querySelector('#canvas');
+    canvas.toBlob(function(blob) {
+        saveAs(blob, "sketchfab-flipbook.png");
+    });
+}
+
+var downloadButton = document.querySelector('.download');
+var canvasEl = document.querySelector('#canvas');
+downloadButton.addEventListener('click', download, false);
+canvasEl.addEventListener('click', download, false);
+
+var pickButton = document.querySelector('.pick');
+pickButton.addEventListener('click', function(){
+    picker.pick({
+        success: function(model) {
+            if ( model.uid ) {
+                generateFlipBook(model.uid);
+            }
+        }
+    });
+}, false);
+
+function onLoading() {
+    var successEl = document.querySelector('.generator-download .success');
+    var errorEl = document.querySelector('.generator-download .error');
+    var loadingEl = document.querySelector('.generator-download .loading');
+    successEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    loadingEl.style.display = 'block';
+}
+
+function onSuccess() {
+    var successEl = document.querySelector('.generator-download .success');
+    var errorEl = document.querySelector('.generator-download .error');
+    var loadingEl = document.querySelector('.generator-download .loading');
+    successEl.style.display = 'block';
+    errorEl.style.display = 'none';
+    loadingEl.style.display = 'none';
+}
+
+function onError() {
+    var successEl = document.querySelector('.generator-download .success');
+    var errorEl = document.querySelector('.generator-download .error');
+    var loadingEl = document.querySelector('.generator-download .loading');
+    successEl.style.display = 'none';
+    errorEl.style.display = 'block';
+    loadingEl.style.display = 'none';
+}
+
+function renderModelPreview(model) {
+    var infoEl = document.querySelector('.model-info');
+    var nameEl = document.querySelector('.model-name');
+    var authorEl = document.querySelector('.model-author');
+    infoEl.style.display = 'block';
+    nameEl.innerText = model.name;
+    authorEl.innerText = model.user.displayName;
+
+    var thumbnail = model.thumbnails.images.reduce( function ( acc, current ) {
+        if ( current.width >= 200 && acc === '' ) {
+            return current.url;
+        } else {
+            return acc;
+        }
+    }, '' );
+    // infoEl.style.background = 'url(' + thumbnail +')';
+}
+
+function generateFlipBook( uid ) {
+    var fallbackUrl = 'http://sketchfab.com/i/models/' + uid +'/fallback';
+    axios.get(fallbackUrl).then(function(response){
+        var images = response.data.results.images;
+        var largestImage = images.reduce(function(acc, val){
+            if (val.height > acc.height) {
+                return val;
+            } else {
+                return acc;
+            }
+        }, images[0]);
+
+        makeFlipBook(largestImage.url);
+    }).catch(function(){
+        onError();
+        console.error('Can not find fallback');
+    });
+
+    axios.get('http://sketchfab.com/v3/models/' + uid).then(function(response){
+        renderModelPreview( response.data );
+    }).
+    catch(function(){
+        onError();
+    });
+}
+</script>
+</body>
+</html>
