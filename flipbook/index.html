@@ -265,7 +265,7 @@ function renderModelPreview(model) {
 }
 
 function generateFlipBook( uid ) {
-    var fallbackUrl = 'http://sketchfab.com/i/models/' + uid +'/fallback';
+    var fallbackUrl = 'https://sketchfab.com/i/models/' + uid +'/fallback';
     axios.get(fallbackUrl).then(function(response){
         var images = response.data.results.images;
         var largestImage = images.reduce(function(acc, val){
@@ -282,7 +282,7 @@ function generateFlipBook( uid ) {
         console.error('Can not find fallback');
     });
 
-    axios.get('http://sketchfab.com/v3/models/' + uid).then(function(response){
+    axios.get('https://api.sketchfab.com/v3/models/' + uid).then(function(response){
         renderModelPreview( response.data );
     }).
     catch(function(){
