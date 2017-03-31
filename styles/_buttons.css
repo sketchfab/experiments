@@ -24,3 +24,8 @@
 .btn-primary:focus {
     background: #1C88BB;
 }
+
+.button.btn-large {
+    height: 45px;
+    line-height: 41px;
+}
