@@ -8,11 +8,9 @@
 	<meta name="twitter:title" content="Sketchfab Offline" />
 	<meta name="twitter:description" content="You’ve asked for it, we’ve delivered. Now you can share your work wherever you are. Even without an internet connection." />
 	<meta name="twitter:image" content="https://labs.sketchfab.com/experiments/flipbook/player/example.png" />
-	<meta name="twitter:player" content="https://labs.sketchfab.com/experiments/flipbook/player/container.html" />
-	<meta name="twitter:player:width" content="420" />
-	<meta name="twitter:player:height" content="236" />
-	<meta name="twitter:player:stream" content="https://labs.sketchfab.com/experiments/flipbook/player/video.mp4" />
-	<meta name="twitter:player:stream:content_type" content="video/mp4" />
+	<meta name="twitter:player" content="https://www.youtube.com/embed/dtonieiri1s" />
+	<meta name="twitter:player:width" content="560" />
+	<meta name="twitter:player:height" content="315" />
 
     <title>Sketchfab Offline</title>
 
@@ -64,11 +62,10 @@
         </div>
 
         <div class="hero__player">
-            <div class="hero__preview">
-                <video width="100%" controls>
-                    <source src="./player/video.mp4" type="video/mp4">
-                    Your browser does not support video
-                </video>
+            <div class="hero__preview ratio-16-9">
+                <div class="ratio__inner">
+                    <iframe class="hero__video" width="560" height="315" src="https://www.youtube.com/embed/dtonieiri1s" frameborder="0" allowfullscreen></iframe>
+                </div>
             </div>
         </div>
     </div>
