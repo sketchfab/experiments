@@ -1,0 +1,90 @@
+<html>
+
+    <head>
+        <title>Sketchfab Speech Prototype</title>
+        <link rel="stylesheet" type="text/css" href="style-0.0.1.css">
+    </head>
+    
+    <body>
+        
+        <iframe id="viewer" width="100%" height="100%" src="about:blank" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
+<p>Start and Speak.</p>
+        <div class="compact marquee" id="div_language">
+          <select id="select_language" onchange="updateCountry(event);">
+            <option value="0">Afrikaans</option><option value="1">Bahasa Indonesia</option><option value="2">Bahasa Melayu</option><option value="3">Català</option><option value="4">Čeština</option><option value="5">Dansk</option><option value="6">Deutsch</option><option value="7" selected>English</option><option value="8">Español</option><option value="9">Euskara</option><option value="10">Filipino</option><option value="11">Français</option><option value="12">Galego</option><option value="13">Hrvatski</option><option value="14">IsiZulu</option><option value="15">Íslenska</option><option value="16">Italiano</option><option value="17">Lietuvių</option><option value="18">Magyar</option><option value="19">Nederlands</option><option value="20">Norsk bokmål</option><option value="21">Polski</option><option value="22">Português</option><option value="23">Română</option><option value="24">Slovenščina</option><option value="25">Slovenčina</option><option value="26">Suomi</option><option value="27">Svenska</option><option value="28">Tiếng Việt</option><option value="29">Türkçe</option><option value="30">Ελληνικά</option><option value="31">български</option><option value="32">Pусский</option><option value="33">Српски</option><option value="34">Українська</option><option value="35">한국어</option><option value="36">中文</option><option value="37">日本語</option><option value="38">हिन्दी</option><option value="39">ภาษาไทย</option></select>&nbsp;&nbsp; <select id="select_dialect" style="visibility: visible;">
+            <option value="en-AU">Australia</option><option value="en-CA">Canada</option><option value="en-IN">India</option><option value="en-NZ">New Zealand</option><option value="en-ZA">South Africa</option><option value="en-GB">United Kingdom</option><option value="en-US" selected>United States</option></select>
+        </div>
+
+        <div id="controls" class="hidden">
+            
+            <input id="model" type="text" value="a1c601ef1906408fb91c98686308f3a3">
+            <button id="start-button">start</button>
+        </div>
+
+        <span id="ws-unsupported" class="api-support hidden">API not supported</span>
+
+        <div  class="hidden">
+         <h2>Transcription</h2>
+         <textarea id="transcription" readonly="readonly"></textarea>
+
+          <span>Results:</span>
+          <label><input type="radio" name="recognition-type" value="final" checked="checked" /> Final only</label>
+          <label><input type="radio" name="recognition-type" value="interim" /> Interim</label>
+
+          <h3>Log</h3>
+          <div id="log"></div>
+
+          <div class="buttons-wrapper">
+                <button id="button-play-ws" class="button-demo">Play (start auto just in case)</button>
+                <button id="button-stop-ws" class="button-demo">Stop demo (more of a restart really)</button>
+             <button id="clear-all" class="button-demo">Clear all</button>
+      </div>
+</div>
+        
+
+        <script src="sketchfab-viewer-1.0.0.js"></script>
+        <script src="main.js"></script>
+        
+        <div>
+        Speak number to navigate between hotspots
+        
+        Otherwise try:
+        
+    <br />'zoom'
+    <br />'zoom in'
+    <br />'agrandissement'
+
+    <br />'zoom out'
+    <br />'réduction'
+
+    <br />'move left'
+    <br />'vers la gauche'
+    
+
+    <br />'move right'
+    <br />'vers la droite'
+
+    <br />'down'
+    <br />'move down'
+    <br />'vers le bas'
+    <br />'bas'
+
+    <br />'app'
+    <br />'up'
+    <br />'move up'
+    <br />'vers le haut'
+    <br />'vers le eau'
+    <br />'haut'
+
+    <br />'left'
+    <br />'turn left'
+    <br />'tourner à gauche'
+    
+
+    <br />'right'
+    <br />'turn right'
+    <br />'tourner à droite'
+
+        <div>
+    </body>
+</html>
