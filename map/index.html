@@ -60,11 +60,40 @@ var state = {
     next: null
 }
 
+var tiles;
+var markerLayer;
+
 function initMap() {
-    var mymap = L.map('map').setView([50, 0], 5);
-    L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
-    }).addTo(mymap);
+
+    tiles = {
+        map: L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+        }),
+        satellite: L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    	       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        })
+    };
+
+    markerLayer = L.layerGroup();
+
+    var mymap = L.map('map', {
+        layers: [
+            tiles.satellite,
+            tiles.map,
+        ]
+    }).setView([50, 0], 5);
+
+    var baseMaps = {
+        "Satellite": tiles.satellite,
+        "Map": tiles.map,
+    };
+
+    var layerControl = L.control.layers(baseMaps, null, {
+        collapsed: false
+    });
+
+    mymap.addControl(layerControl);
+    mymap.addLayer(markerLayer);
     return mymap;
 }
 
@@ -136,7 +165,7 @@ function renderMarker(model) {
         marker.on('click', function(){
             selectModel(model.uid);
         });
-        marker.addTo(App.map);
+        marker.addTo(markerLayer);
         return marker;
     } else {
         return false;
