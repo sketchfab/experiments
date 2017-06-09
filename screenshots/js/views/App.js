@@ -1,40 +1,75 @@
 'use strict';
 
-var sanitizeFilename = function ( s ) {
-    return s.replace( /[^a-z0-9]/gi, '_' ).toLowerCase();
-}
-
 var AppView = Backbone.View.extend( {
 
     el: '.app',
 
     events: {
-        'submit .form-load': 'onLoadModelClick',
-        'submit .form-options': 'onTakeScreenshotClick',
+        'click #load-scene': 'onLoadSceneClick',
+        'mouseover #load-scene': 'renderFrame',
+        'change input[name="width"]': 'resizeFrame',
+        'change input[name="height"]': 'resizeFrame',
+        'change input[name="transparent"]': 'onTransparencyChange'
     },
 
     initialize: function () {
         var version = '1.0.0';
-        this.iframe = this.$el.find( '#viewer-frame' ).get( 0 );
+        this.iframe = this.$el.find( '#api-frame' ).get( 0 );
         this.client = new Sketchfab( version, this.iframe );
+        this.uid = null;
         this.filename = 'screenshot.png';
 
-        this._renderingOptionsView = new RenderingOptionsView();
-        this._sceneGraphView = new SceneGraphView();
+        this._sceneView = new SceneUIView();
+        this._screenshotView = new ScreenshotUIView();
+
+        this.listenTo( this._screenshotView, 'requestScreenshot', function ( options ) {
+            this.takeScreenshot( options.width, options.height );
+        }.bind( this ) );
+
+        this.resizeFrame();
+        this.disableControls();
+
+        $( window ).on( 'resize', _.debounce( function () {
+            this.resizeFrame();
+        }.bind( this ), 100 ) );
     },
 
-    onLoadModelClick: function ( e ) {
-        e.preventDefault();
-        var urlid = $.trim( this.$el.find( 'input[name="urlid"]' ).val() );
-        var transparent = this.$el.find( 'input[name="transparent"]' ).is( ':checked' );
-        this.initViewer( urlid, transparent );
+    onTransparencyChange: function ( e ) {
+        if ( this.uid ) {
+            this.initViewer( this.uid );
+        }
     },
 
-    initViewer: function ( urlid, transparent ) {
+    onLoadSceneClick: function ( e ) {
+        var picker = new SketchfabPicker();
+        picker.pick( {
+            success: function ( model ) {
+
+                if ( model.uid === this.uid ) {
+                    this.initViewer( model.uid );
+                }
+
+                if ( model.uid ) {
+                    router.navigate( 'model/' + model.uid, {
+                        trigger: true
+                    } );
+                }
+
+            }.bind( this )
+        } );
+    },
+
+    initViewer: function ( urlid ) {
+
+        this.uid = urlid;
+        this.disableControls();
+
+        var isTransparent = this.$el.find( 'input[name="transparent"]' ).is( ':checked' );
+
         this.client.init( urlid, {
             overrideDevicePixelRatio: 1,
             camera: 0,
-            transparent: transparent ? 1 : 0,
+            transparent: isTransparent ? 1 : 0,
             success: function onSuccess( api ) {
                 this.api = api;
                 api.start();
@@ -49,7 +84,7 @@ var AppView = Backbone.View.extend( {
 
         this.getModelInfo( urlid ).then(
             function ( response ) {
-                this.filename = sanitizeFilename( response.name ) + '.png';
+                this.filename = this.sanitizeFilename( response.name ) + '.png';
             }.bind( this ),
             function () {
                 //Can't find model info
@@ -59,7 +94,7 @@ var AppView = Backbone.View.extend( {
 
     getModelInfo: function ( urlid ) {
         return $.ajax( {
-            url: 'https://api.sketchfab.com/v2/models/' + urlid,
+            url: 'https://api.sketchfab.com/v3/models/' + urlid,
             crossDomain: true,
             dataType: 'json',
             type: 'GET'
@@ -67,18 +102,19 @@ var AppView = Backbone.View.extend( {
     },
 
     onViewerReady: function () {
+        this._sceneView.setApi( this.api );
+        this._screenshotView.setApi( this.api );
         this.enableControls();
     },
 
     enableControls: function () {
-        this._renderingOptionsView.setApi( this.api );
-        this._sceneGraphView.setApi( this.api );
-
-        this.$el.find( '.options' ).addClass( 'active' );
+        this.$el.find( '#screenshot-panel' ).addClass( 'active' );
+        this.$el.find( '#scene-panel' ).addClass( 'active' );
     },
 
     disableControls: function () {
-        this.$el.find( '.options' ).removeClass( 'active' );
+        this.$el.find( '#screenshot-panel' ).removeClass( 'active' );
+        this.$el.find( '#scene-panel' ).removeClass( 'active' );
     },
 
     showProgress: function () {
@@ -105,12 +141,16 @@ var AppView = Backbone.View.extend( {
 
         setTimeout( function () {
             this.api.getScreenShot( width, width * ( width / height ), 'image/png', function ( err, result ) {
-                this.resizeViewer( '100%', '100%' );
+                this.resizeFrame();
                 this.hideProgress();
                 this.enableControls();
                 this.saveImage( result );
             }.bind( this ) );
         }.bind( this ), 1000 );
+    },
+
+    sanitizeFilename: function ( s ) {
+        return s.replace( /[^a-z0-9]/gi, '_' ).toLowerCase();
     },
 
     saveImage: function ( b64Image ) {
@@ -134,14 +174,28 @@ var AppView = Backbone.View.extend( {
         }
     },
 
-    onTakeScreenshotClick: function ( e ) {
-        e.preventDefault();
+    resizeFrame: function () {
+        var $viewport = this.$el.find( '.viewer' );
+        var $frame = this.$el.find( '#api-frame' );
+
         var width = parseInt( this.$el.find( 'input[name="width"]' ).val(), 10 );
         var height = parseInt( this.$el.find( 'input[name="height"]' ).val(), 10 );
+        var ratio = width / height;
 
-        width = Math.min( width, 4096 );
-        height = Math.min( height, 4096 );
+        var viewportWidth = $viewport.width();
+        var viewportHeight = $viewport.height();
+        var viewportRatio = viewportWidth / viewportHeight;
 
-        this.takeScreenshot( width, height );
+        if ( ratio < viewportRatio ) {
+            $frame.css( {
+                width: Math.floor( viewportHeight * ratio ),
+                height: viewportHeight
+            } );
+        } else {
+            $frame.css( {
+                width: viewportWidth,
+                height: Math.floor( viewportWidth / ratio )
+            } );
+        }
     }
 } );

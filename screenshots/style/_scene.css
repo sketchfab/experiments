@@ -1,0 +1,34 @@
+.objects {
+    box-sizing: border-box;
+    width: 320px;
+    overflow: auto;
+    border: 2px solid #eee;
+    border-radius: 6px;
+    background: #f2f2f2;
+    margin: 10px 0;
+}
+    .objects ul {
+        padding-left: 10px;
+        list-style: none;
+        margin: 0;
+        font-size: 13px;
+    }
+    .objects li {
+        white-space: nowrap;
+    }
+    .objects i {
+        color: #888;
+    }
+
+.objects .hidden {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.objects .hidden li {
+    pointer-events: none;
+}
+
+.objects li {
+    cursor: pointer;
+}
