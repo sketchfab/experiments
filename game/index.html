@@ -40,6 +40,15 @@
         Time: <span class="time-value"></span>
     </div>
 
+    <div class="intro">
+        <h1>Collect the gems!</h1>
+        <div class="instructions" style="visibility: hidden;">
+            <img src="keys.png" alt="Arrow keys">
+            <br>
+            <span>Press a key to start</span>
+        </div>
+    </div>
+
     <!-- Initialize the viewer -->
     <script type="text/javascript">
         var iframe = document.getElementById('api-frame');
@@ -70,6 +79,14 @@
             }, 100);
         }
 
+        var intro = true;
+        function hideIntro() {
+            if (intro) {
+                document.querySelector('.intro').className = 'intro hidden';
+                intro = false;
+            }
+        }
+
         function start() {
             window.score = 0;
             updateScore();
@@ -96,6 +113,8 @@
                     console.log('Viewer is ready');
                     window.api = api;
 
+                    document.querySelector('.instructions').style.visibility = 'visible';
+
                     api.getNodeMap(function(err, nodes) {
                         if (!err) {
                             window.gemManager = new GemManager([
@@ -108,16 +127,20 @@
                             window.hero = new Hero(getNodeByName(nodes, "hero"));
 
                             key('up', function() {
-                                window.hero.moveUp()
+                                window.hero.moveUp();
+                                hideIntro();
                             });
                             key('down', function() {
-                                window.hero.moveDown()
+                                hideIntro();
+                                window.hero.moveDown();
                             });
                             key('left', function() {
-                                window.hero.moveLeft()
+                                window.hero.moveLeft();
+                                hideIntro();
                             });
                             key('right', function() {
-                                window.hero.moveRight()
+                                window.hero.moveRight();
+                                hideIntro();
                             });
 
                             window.gemManager.spawn();
@@ -212,7 +235,7 @@
             var y = _.clamp(position[1], -10, 10);
             this.position = [x, y, 1];
 
-            window.api.translate(this.node.instanceID, this.position, 0);
+            window.api.translate(this.node.instanceID, this.position, 0.05);
             window.gemManager.checkHeroPosition( this );
 
             if (!window.timer) {

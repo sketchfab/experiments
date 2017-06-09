@@ -43,3 +43,23 @@ body {
     color: white;
     text-shadow: 1px 1px 0 rgba(0,0,0,.5);
 }
+
+.intro {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: 40px;
+    background: rgba(0,0,0,.8);
+    color: #fff;
+    transform: translate(-50%, -50%);
+    border-radius: 6px;
+    text-align: center;
+}
+.intro.hidden {
+    display: none;
+}
+
+    .intro img {
+        width: 100px;
+        margin-bottom: 20px;
+    }
