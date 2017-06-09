@@ -7,12 +7,24 @@ body {
     font-family: 'Varela Round', sans-serif;
 }
 
-#api-frame {
+.viewer{
     display: block;
     width: 100%;
     height: calc(100% - 60px);
-    border: 0;
 }
+    #api-frame {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+    .viewer .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
 
 .score {
     position: absolute;

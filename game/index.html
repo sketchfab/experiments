@@ -26,7 +26,11 @@
     </header>
 
     <!-- Insert an empty iframe -->
-    <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+    <div class="viewer">
+        <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+        <div class="overlay">
+        </div>
+    </div>
 
     <div class="score">
         Score: <span class="score-value">0</span>
@@ -80,11 +84,6 @@
             });
         }
 
-        function loop() {
-            // console.log('.');
-            window.requestAnimationFrame( loop );
-        }
-
         client.init(urlid, {
             'ui_infos': 0,
             'ui_controls': 0,
@@ -122,7 +121,6 @@
                             });
 
                             window.gemManager.spawn();
-                            loop();
 
                         }
                     });
