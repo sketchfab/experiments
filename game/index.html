@@ -26,7 +26,11 @@
     </header>
 
     <!-- Insert an empty iframe -->
-    <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+    <div class="viewer">
+        <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+        <div class="overlay">
+        </div>
+    </div>
 
     <div class="score">
         Score: <span class="score-value">0</span>
@@ -34,6 +38,15 @@
 
     <div class="time">
         Time: <span class="time-value"></span>
+    </div>
+
+    <div class="intro">
+        <h1>Collect the gems!</h1>
+        <div class="instructions" style="visibility: hidden;">
+            <img src="keys.png" alt="Arrow keys">
+            <br>
+            <span>Press a key to start</span>
+        </div>
     </div>
 
     <!-- Initialize the viewer -->
@@ -66,6 +79,14 @@
             }, 100);
         }
 
+        var intro = true;
+        function hideIntro() {
+            if (intro) {
+                document.querySelector('.intro').className = 'intro hidden';
+                intro = false;
+            }
+        }
+
         function start() {
             window.score = 0;
             updateScore();
@@ -80,11 +101,6 @@
             });
         }
 
-        function loop() {
-            // console.log('.');
-            window.requestAnimationFrame( loop );
-        }
-
         client.init(urlid, {
             'ui_infos': 0,
             'ui_controls': 0,
@@ -96,6 +112,8 @@
                     // Insert your code here
                     console.log('Viewer is ready');
                     window.api = api;
+
+                    document.querySelector('.instructions').style.visibility = 'visible';
 
                     api.getNodeMap(function(err, nodes) {
                         if (!err) {
@@ -109,20 +127,23 @@
                             window.hero = new Hero(getNodeByName(nodes, "hero"));
 
                             key('up', function() {
-                                window.hero.moveUp()
+                                window.hero.moveUp();
+                                hideIntro();
                             });
                             key('down', function() {
-                                window.hero.moveDown()
+                                hideIntro();
+                                window.hero.moveDown();
                             });
                             key('left', function() {
-                                window.hero.moveLeft()
+                                window.hero.moveLeft();
+                                hideIntro();
                             });
                             key('right', function() {
-                                window.hero.moveRight()
+                                window.hero.moveRight();
+                                hideIntro();
                             });
 
                             window.gemManager.spawn();
-                            loop();
 
                         }
                     });
@@ -214,7 +235,7 @@
             var y = _.clamp(position[1], -10, 10);
             this.position = [x, y, 1];
 
-            window.api.translate(this.node.instanceID, this.position, 0);
+            window.api.translate(this.node.instanceID, this.position, 0.05);
             window.gemManager.checkHeroPosition( this );
 
             if (!window.timer) {
