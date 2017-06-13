@@ -140,7 +140,7 @@ var AppView = Backbone.View.extend( {
         this.disableControls();
 
         setTimeout( function () {
-            this.api.getScreenShot( width, width * ( width / height ), 'image/png', function ( err, result ) {
+            this.api.getScreenShot( width, height, 'image/png', function ( err, result ) {
                 this.resizeFrame();
                 this.hideProgress();
                 this.enableControls();
