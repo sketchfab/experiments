@@ -3,8 +3,12 @@ var rasterCanvas = document.querySelector( '#rasterCanvas' );
 var controls = document.querySelector( '#controls' );
 var startButton = document.querySelector( '#capture-button' );
 var stopButton = document.querySelector( '#stop-button' );
+var fullscreenButton = document.querySelector( '#fullscreen-button' );
 var viewer = document.querySelector( '#viewer' );
 var modelInput = document.querySelector( '#model' );
+var viewport = document.querySelector( '.viewport' );
+var controls = document.querySelector( '#controls' );
+var toggleButton = document.querySelector( '.toggle' );
 
 var Camera = {
 
@@ -204,3 +208,29 @@ stopButton.addEventListener( 'click', function () {
     viewer.style.display = 'none';
     Tracking.stop();
 }, false );
+
+fullscreenButton.addEventListener( 'click', function () {
+
+    function enterFullscreen( element ) {
+        if ( element.requestFullscreen ) {
+            element.requestFullscreen();
+        } else if ( element.mozRequestFullScreen ) {
+            element.mozRequestFullScreen();
+        } else if ( element.webkitRequestFullscreen ) {
+            element.webkitRequestFullscreen();
+        } else if ( element.msRequestFullscreen ) {
+            element.msRequestFullscreen();
+        }
+    }
+
+    enterFullscreen( viewport );
+} );
+
+toggleButton.addEventListener( 'click', function () {
+    var isActive = controls.className.indexOf( 'active' ) !== -1;
+    if ( isActive ) {
+        controls.className = controls.className.replace( 'active', '' );
+    } else {
+        controls.className = controls.className + ' active';
+    }
+} );

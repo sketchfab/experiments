@@ -18,18 +18,24 @@
         </h1>
     </header>
     <div class="app">
-        <video id="video" autoplay></video>
-        <canvas height="240" width="320" id="rasterCanvas"></canvas>
-
-        <iframe id="viewer" width="100%" height="100%" src="about:blank" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
-
-        <div id="controls">
+        <div class="viewport">
+            <video id="video" autoplay></video>
+            <canvas height="240" width="320" id="rasterCanvas"></canvas>
+            <iframe id="viewer" width="100%" height="100%" src="about:blank" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>
+        </div>
+        <div id="controls" class="active">
+            <span class="toggle">
+                <span class="arrow">▼</span>
+            </span>
             <h1>Sketchfab Augmented Reality experiment</h1>
             <div>
                 <label for="model">Enter a model ID:</label><br>
                 <input id="model" type="text" value="f7d347b6afb349b296bce9d0b336f95a" size="36">
-                <button id="capture-button" class="button btn-primary">Load</button>
-                <button id="stop-button" class="button btn-secondary">Stop</button>
+                <p>
+                    <button id="capture-button" class="button btn-primary">Load</button>
+                    <button id="stop-button" class="button btn-secondary">Stop</button>
+                    <button id="fullscreen-button" class="button btn-secondary">Fullscreen</button>
+                </p>
             </div>
             <p>You can also <a href="4.png" download>download a printable marker</a> for tracking</p>
         </div>
@@ -40,7 +46,7 @@
 <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.0.0.js"></script>
 <script type="text/javascript" src="http://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="JSARTToolkit.js"></script>
-<script src="main-0.0.2.js"></script>
+<script src="main-0.1.0.js"></script>
 <script type="text/javascript">
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

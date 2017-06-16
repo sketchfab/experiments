@@ -35,13 +35,20 @@ body {
 }
 
 #controls {
+    box-sizing: border-box;
     background: #FFFFFF;
     border-radius: 3px;
-    padding: 20px;
     position: absolute;
+    padding: 15px 20px 0 20px;
     top: 10px;
     left: 10px;
     z-index: 1;
+    max-height: 15px;
+    overflow: hidden;
+}
+#controls.active {
+    max-height: 1000px;
+    padding: 20px;
 }
 
     #controls h1 {
@@ -52,6 +59,32 @@ body {
     #controls p {
         margin: 1em 0 0 0;
         font-size: 13px;
+    }
+
+    #controls .toggle {
+        display: block;
+        color: #AAA;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        font-size: 10px;
+        height: 15px;
+        line-height: 15px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    #controls .toggle:hover {
+        background: #EEE;
+    }
+
+    #controls .arrow {
+        display: block;
+    }
+
+    #controls.active .arrow {
+        transform: rotate(180deg);
     }
 
 #rasterCanvas {
