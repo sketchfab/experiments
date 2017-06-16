@@ -1,8 +1,8 @@
 .viewer {
     position: relative;
     flex: 1 1 auto;
-    /*background: url("../assets/checker.png") repeat;*/
-    background: #000;
+    background: url("../assets/checker.png") repeat;
+    /*background: #000;*/
     overflow: hidden;
 }
     .viewer iframe {
