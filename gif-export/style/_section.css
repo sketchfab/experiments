@@ -1,0 +1,43 @@
+.section {
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
+    opacity: 0.2;
+    pointer-events: none;
+    font-size: 14px;
+}
+.section.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+    .section-title {
+        margin: 0;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #000;
+    }
+
+.field {
+    margin: 10px 0;
+}
+.field-label {
+    display: inline-block;
+    min-width: 6em;
+}
+.field-control {
+    display: inline-block;
+}
+
+.field-duration {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.field-duration.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.resolution-preset {
+    font-size: smaller;
+    text-decoration: none;
+}
