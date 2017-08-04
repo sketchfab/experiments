@@ -1,15 +1,19 @@
 'use strict';
 
-var $ = require('jquery');
-var _ = require('underscore');
-var Backbone = require('backbone');
+// var $ = require('jquery');
+// var _ = require('underscore');
+// var Backbone = require('backbone');
 
-var CAMERA_POLLING_INTERVAL = 500;
+var CAMERA_POLLING_INTERVAL = 100;
 var CAMERA_DELTA = 0.00001;
 
 var AppView = Backbone.View.extend({
 
     el: 'body',
+    events: {
+        'submit .viewer-a form': 'onViewerASubmit',
+        'submit .viewer-b form': 'onViewerBSubmit',
+    },
 
     initialize: function() {
         var version = '1.0.0';
@@ -25,7 +29,6 @@ var AppView = Backbone.View.extend({
                 api: null,
                 client: new Sketchfab(version, iframeA),
                 ready: false,
-                urlid: '375ae80dc7e34b229cc9739b1ce92e2b',
                 camera: null,
                 previousCamera: {
                     position: [0, 0, 0],
@@ -37,7 +40,6 @@ var AppView = Backbone.View.extend({
                 api: null,
                 client: new Sketchfab(version, iframeB),
                 ready: false,
-                urlid: '00e448826184414db5660601d76e4d8e',
                 camera: null,
                 previousCamera: {
                     position: [0, 0, 0],
@@ -50,7 +52,14 @@ var AppView = Backbone.View.extend({
     },
 
     initViewers: function() {
-        this.viewers.a.client.init(this.viewers.a.urlid, {
+
+        this.stopCameraPolling();
+        this.viewers.a.ready = false;
+        this.viewers.b.ready = false;
+        var urlidA = this.$el.find('.viewer-a input[type="text"]').val();
+        var urlidB = this.$el.find('.viewer-b input[type="text"]').val();
+
+        this.viewers.a.client.init(urlidA, {
             camera: 0,
             success: function onSuccess(apiA) {
                 this.viewers.a.api = apiA;
@@ -65,7 +74,7 @@ var AppView = Backbone.View.extend({
             }
         });
 
-        this.viewers.b.client.init(this.viewers.b.urlid, {
+        this.viewers.b.client.init(urlidB, {
             camera: 0,
             success: function onSuccess(apiB) {
                 this.viewers.b.api = apiB;
@@ -89,8 +98,8 @@ var AppView = Backbone.View.extend({
 
             this.startCameraPolling();
 
-            this.viewers.a.api.setCameraLookAt([0, -10, 0], [0, 0, 0], 2);
-            this.viewers.b.api.setCameraLookAt([0, -10, 0], [0, 0, 0], 2);
+            this.viewers.a.api.setCameraLookAt([0, -10, 0], [0, 0, 0], 1.0);
+            this.viewers.b.api.setCameraLookAt([0, -10, 0], [0, 0, 0], 1.0);
         }
     },
 
@@ -105,6 +114,12 @@ var AppView = Backbone.View.extend({
                 this._onCameraPolled(this.viewers.b);
             }.bind(this));
         }.bind(this), CAMERA_POLLING_INTERVAL);
+    },
+
+    stopCameraPolling: function() {
+        if (this._pollingTimer) {
+            window.clearInterval(this._pollingTimer);
+        }
     },
 
     _onCameraPolled: function(viewer) {
@@ -132,14 +147,22 @@ var AppView = Backbone.View.extend({
             }
 
             if (this.currentViewer === 'a') {
-                this.viewers.b.api.setCameraLookAt(camera.position, camera.target, 0.5);
+                this.viewers.b.api.setCameraLookAt(camera.position, camera.target, 0);
             }
             if (this.currentViewer === 'b') {
-                this.viewers.a.api.setCameraLookAt(camera.position, camera.target, 0.5);
+                this.viewers.a.api.setCameraLookAt(camera.position, camera.target, 0);
             }
         }
+    },
+
+    onViewerASubmit: function( e ) {
+        e.preventDefault();
+        this.initViewers();
+    },
+
+    onViewerBSubmit: function( e ) {
+        e.preventDefault();
+        this.initViewers();
     }
 
 });
-
-module.exports = AppView;

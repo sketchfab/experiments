@@ -1,7 +1,5 @@
 'use strict';
 
-var Backbone = require("backbone");
-
 var Router = Backbone.Router.extend({
     routes: {
         '': 'index'
@@ -15,5 +13,3 @@ var Router = Backbone.Router.extend({
 
     },
 });
-
-module.exports = Router;
