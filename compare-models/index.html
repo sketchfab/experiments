@@ -5,7 +5,7 @@
     <title>Compare Sketchfab Models</title>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300|Titillium+Web:700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="../styles/sketchfab.css">
-    <link rel="stylesheet" type="text/css" href="style/app.1.0.0.css">
+    <link rel="stylesheet" type="text/css" href="./style/app.css">
 </head>
 
 <body>
@@ -19,16 +19,28 @@
 </header>
 <div class="app">
     <div class="viewer viewer-a">
+        <form>
+            <input type="text" value="375ae80dc7e34b229cc9739b1ce92e2b" size="40" placeholder="Enter scene uid"><button type="submit">Load</button>
+        </form>
         <iframe src="" id="viewer-a-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
     </div>
     <div class="viewer viewer-b">
+        <form>
+            <input type="text" value="00e448826184414db5660601d76e4d8e" size="40" placeholder="Enter scene uid"><button type="submit">Load</button>
+        </form>
         <iframe src="" id="viewer-b-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="640" height="480"></iframe>
     </div>
 </div>
 
 <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.0.0.js"></script>
-<script type="text/javascript" src="js/vendors/gl-matrix.js"></script>
-<script type="text/javascript" src="js/app.1.0.0.js"></script>
+<script type="text/javascript" src="./js/vendors/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="./js/vendors/lodash.js"></script>
+<script type="text/javascript" src="./js/vendors/backbone-min.js"></script>
+<script type="text/javascript" src="./js/vendors/gl-matrix.js"></script>
+
+<script type="text/javascript" src="js/views/App.js"></script>
+<script type="text/javascript" src="js/Router.js"></script>
+<script type="text/javascript" src="js/app.js"></script>
 <script type="text/javascript">
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
