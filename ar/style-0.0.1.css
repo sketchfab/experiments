@@ -93,3 +93,12 @@ body {
     right: 0;
     display: none;
 }
+
+.message.--info {
+    background: #FFE9B4;
+    border: 1px solid #FED600;
+    padding: 10px 20px;
+    border-radius: 3px;
+    font-size: 14px;
+    margin: 1em 0;
+}
