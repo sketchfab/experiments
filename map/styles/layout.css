@@ -12,11 +12,6 @@ body {
     height: 100%;
 }
 
-.map-container {
-    flex: auto;
-    position: relative;
-}
-
 .sidebar {
     flex: 0 0 50%;
     position: relative;

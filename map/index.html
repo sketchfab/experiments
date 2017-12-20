@@ -23,15 +23,11 @@
             <div class="viewer">
             </div>
         </div>
-        <div class="map-container">
-            <div class="map" id="map">
+        <div class="map__container">
+            <div class="map__header">
+                Double-click on the map to mark a location <button class="map__search">Find by coordinates</button>
             </div>
-            <div class="map-info">
-                <div class="map-info-content">
-                </div>
-                <div class="map-info-actions">
-                    <button>OK</button>
-                </div>
+            <div class="map" id="map">
             </div>
         </div>
     </div>
@@ -62,6 +58,20 @@ var state = {
 
 var tiles;
 var markerLayer;
+var newMarkerLayer;
+var newMarker;
+
+var newIcon = L.icon({
+    iconUrl: 'js/leaflet/images/marker-icon-green.png',
+    iconRetinaUrl: 'js/leaflet/images/marker-icon-green-2x.png',
+    shadowUrl: 'js/leaflet/images/marker-shadow.png',
+
+    iconSize:     [25, 41],
+    shadowSize:   [41, 41],
+    iconAnchor:   [12, 41],
+    shadowAnchor: [12, 41],
+    popupAnchor:  [0, -41]
+});
 
 function initMap() {
 
@@ -75,6 +85,7 @@ function initMap() {
     };
 
     markerLayer = L.layerGroup();
+    newMarkerLayer = L.layerGroup();
 
     var mymap = L.map('map', {
         layers: [
@@ -92,8 +103,10 @@ function initMap() {
         collapsed: false
     });
 
+    mymap.doubleClickZoom.disable();
     mymap.addControl(layerControl);
     mymap.addLayer(markerLayer);
+    mymap.addLayer(newMarkerLayer);
     return mymap;
 }
 
@@ -246,10 +259,9 @@ function unselectModel() {
     }, 500);
 }
 
-function displayMapInfo(lat, lon) {
+function setNewMarker(lat, lon) {
     var hash = Geohash.encode(lat, lon);
     var tags = [
-        'meta_geo',
         'geo_' + hash,
     ].join(', ');
     var indexingTags = [
@@ -262,23 +274,35 @@ function displayMapInfo(lat, lon) {
 
     var tpl = _.template([
         'Coordinates:<br>',
-        '<%= geo.lat %>, <%= geo.lon %>',
-        '<br><br>',
-        'Tags for Sketchfab:<br>',
-        'Required: <code><%= tags %></code><br>',
-        'Optional: <code><%= indexingTags %></code>'
+        '<%= geo.lat %>, <%= geo.lon %><br>',
+        '<br>',
+        '<b>How to add your model to this location</b><br>',
+        'Add the following tags to your model info:<br>',
+        '<code>meta_geo</code><br>',
+        '<code><%= tags %></code><br>',
     ].join(''));
 
-    $('.map-info-content').html(tpl({
+    var content = tpl({
         geo: {
             lat: lat,
             lon: lon
         },
         tags: tags,
         indexingTags: indexingTags
-    }));
+    });
 
-    $('.map-info').addClass('active');
+    if (!newMarker) {
+        newMarker = L.marker([lat, lon], {icon: newIcon});
+        newMarker.addTo(newMarkerLayer);
+        newMarker.bindPopup(content).openPopup();
+    }
+
+    if (newMarker) {
+        newMarker.setLatLng(L.latLng(lat, lon));
+        newMarker.getPopup().setContent(content);
+        newMarker.openPopup();
+    }
+
 }
 
 function init() {
@@ -301,12 +325,21 @@ function init() {
         unselectModel();
     });
 
-    $('.map-info button').on('click', function(){
-        $('.map-info').removeClass('active');
+    $('.map__search').on('click', function(e){
+        e.preventDefault();
+        var value = window.prompt('Enter coordinates (latitude and longitude separated by comma)');
+        if (value) {
+            var coordinates = value.split(',').map(function(value){
+                return parseFloat(value);
+            });
+            if (coordinates.length === 2) {
+                setNewMarker(coordinates[0], coordinates[1]);
+            }
+        }
     });
 
     App.map.on('dblclick', function(e){
-        displayMapInfo(e.latlng.lat, e.latlng.lng)
+        setNewMarker(e.latlng.lat, e.latlng.lng);
     });
 }
 
