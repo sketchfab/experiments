@@ -67,9 +67,10 @@ var AppView = Backbone.View.extend( {
         var isTransparent = this.$el.find( 'input[name="transparent"]' ).is( ':checked' );
 
         this.client.init( urlid, {
-            'image_compression': 0,
-            overrideDevicePixelRatio: 1,
             camera: 0,
+            image_compression: 0,
+            internal: 1,
+            overrideDevicePixelRatio: 1,
             transparent: isTransparent ? 1 : 0,
             success: function onSuccess( api ) {
                 this.api = api;
