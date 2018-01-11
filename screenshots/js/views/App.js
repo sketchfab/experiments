@@ -59,12 +59,23 @@ var AppView = Backbone.View.extend( {
         } );
     },
 
-    initViewer: function ( urlid ) {
+    initViewer: function ( urlid, params ) {
 
         this.uid = urlid;
         this.disableControls();
 
         var isTransparent = this.$el.find( 'input[name="transparent"]' ).is( ':checked' );
+
+        if (params.width || params.height) {
+            if (params.width) {
+                this.$el.find( 'input[name="width"]' ).val(params.width);
+            }
+
+            if (params.height) {
+                this.$el.find( 'input[name="height"]' ).val(params.height);
+            }
+            this.resizeFrame();
+        }
 
         this.client.init( urlid, {
             camera: 0,
@@ -86,7 +97,11 @@ var AppView = Backbone.View.extend( {
 
         this.getModelInfo( urlid ).then(
             function ( response ) {
-                this.filename = this.sanitizeFilename( response.name ) + '.png';
+                if (params.useUidFilename === true) {
+                    this.filename = urlid + '.png';
+                } else {
+                    this.filename = this.sanitizeFilename( response.name ) + '.png';
+                }
             }.bind( this ),
             function () {
                 //Can't find model info
