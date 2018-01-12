@@ -61,6 +61,10 @@ var AppView = Backbone.View.extend( {
 
     initViewer: function ( urlid, params ) {
 
+        if (typeof params === 'undefined') {
+            params = {};
+        }
+
         this.uid = urlid;
         this.disableControls();
 
