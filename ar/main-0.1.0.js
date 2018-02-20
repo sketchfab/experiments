@@ -70,6 +70,7 @@ var Viewer = {
             transparent: 1,
             watermark: 0,
             preload: 1,
+            internal: 1,
             success: function onSuccess( api ) {
                 Viewer.api = api;
                 api.start( function () {
