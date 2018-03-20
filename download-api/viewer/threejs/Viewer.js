@@ -39,6 +39,20 @@ var ThreeViewer = {
         ThreeViewer.renderer.gammaOutput = true;
         ThreeViewer.el.appendChild(ThreeViewer.renderer.domElement);
 
+        //Environment
+        var hdrUrls = ThreeViewer._genCubeUrls('./viewer/threejs/assets/pisaHDR/', '.hdr');
+        var hdrCubeRenderTarget;
+        new THREE.HDRCubeTextureLoader().load(THREE.UnsignedByteType, hdrUrls, function(
+            hdrCubeMap
+        ) {
+            var pmremGenerator = new THREE.PMREMGenerator(hdrCubeMap);
+            pmremGenerator.update(ThreeViewer.renderer);
+            var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker(pmremGenerator.cubeLods);
+            pmremCubeUVPacker.update(ThreeViewer.renderer);
+            hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
+            ThreeViewer.environment = hdrCubeRenderTarget.texture;
+        });
+
         // Scene
         var geometry = new THREE.PlaneGeometry(10, 10, 10);
         var material = new THREE.MeshBasicMaterial({ color: 0xcccccc, side: THREE.DoubleSide });
@@ -49,6 +63,17 @@ var ThreeViewer = {
         ThreeViewer.loop();
 
         window.addEventListener('resize', ThreeViewer.handleResize, false);
+    },
+
+    _genCubeUrls: function(prefix, postfix) {
+        return [
+            prefix + 'px' + postfix,
+            prefix + 'nx' + postfix,
+            prefix + 'py' + postfix,
+            prefix + 'ny' + postfix,
+            prefix + 'pz' + postfix,
+            prefix + 'nz' + postfix
+        ];
     },
 
     handleResize: function() {
@@ -103,6 +128,16 @@ var ThreeViewer = {
                 gltf.scene.translateX(centerX);
                 gltf.scene.translateY(centerY);
                 gltf.scene.translateZ(centerZ);
+
+                //Update materials with env
+                if (ThreeViewer.environment) {
+                    gltf.scene.traverse(function(node) {
+                        if (node.material && 'envMap' in node.material) {
+                            node.material.envMap = ThreeViewer.environment;
+                            node.material.needsUpdate = true;
+                        }
+                    });
+                }
             },
             undefined,
             function(error) {
