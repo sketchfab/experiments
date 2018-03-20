@@ -835,6 +835,10 @@ var OSGJSViewer = {
      */
     init: function () {
 
+        window.App.setState({
+            isLoading: true
+        });
+
         this._promiseViewerReady = new Promise(function (resolveViewerReady, rejectViewerReady) {
             var viewerEl = document.querySelector('.viewer');
             viewerEl.innerHTML =
@@ -910,6 +914,9 @@ var OSGJSViewer = {
                                     enableOrbitCamera
                                 );
 
+                            window.App.setState({
+                                isLoading: false
+                            });
                             resolveViewerReady();
                         }.bind(this)
                     );
