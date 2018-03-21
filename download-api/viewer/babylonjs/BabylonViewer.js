@@ -19,21 +19,21 @@ var BabylonViewer = {
             enableOfflineSupport: false
         });
         var scene = new BABYLON.Scene(engine);
+        scene.createDefaultEnvironment();
+
         var camera = new BABYLON.ArcRotateCamera(
             'Camera',
             Math.PI / 2,
             Math.PI / 2,
-            2,
+            1,
             BABYLON.Vector3.Zero(),
             scene
         );
+        camera.lowerRadiusLimit = 0.001;
+        camera.wheelPrecision = 50;
         camera.setPosition(new BABYLON.Vector3(0, 5, 10));
         camera.setTarget(new BABYLON.Vector3(0, 2, 0));
         camera.attachControl(BabylonViewer.canvas, false, false);
-
-        var plane = new BABYLON.MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene);
-        var light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(1, 1, 0), scene);
-        var light2 = new BABYLON.PointLight('light2', new BABYLON.Vector3(0, 1, -1), scene);
 
         BabylonViewer.engine = engine;
         BabylonViewer.scene = scene;
@@ -54,13 +54,33 @@ var BabylonViewer = {
     loadGltf: function(assetMap, url) {
         var path = assetMap[url];
 
-        BABYLON.SceneLoader.ImportMesh(
-            '',
+        this._emptyScene();
+
+        BABYLON.SceneLoader.Append(
             '',
             path,
             BabylonViewer.scene,
             function onSuccess() {
                 console.log('Loaded');
+
+                //Normalize scene scale
+                var bbox = BabylonViewer.scene.getWorldExtends();
+                var TARGET_SIZE = 10;
+                var largestSide = Math.max(
+                    bbox.max.x - bbox.min.x,
+                    bbox.max.y - bbox.min.y,
+                    bbox.max.z - bbox.min.z
+                );
+                var ratio = TARGET_SIZE / largestSide;
+
+                for (var i = 0, l = BabylonViewer.scene.meshes.length; i < l; i++) {
+                    if (BabylonViewer.scene.meshes[i].id === 'RootNode (gltf orientation matrix)') {
+                        BabylonViewer.scene.meshes[i].scaling.x = ratio;
+                        BabylonViewer.scene.meshes[i].scaling.y = ratio;
+                        BabylonViewer.scene.meshes[i].scaling.z = ratio;
+                    }
+
+                }
             },
             function onProgress() {},
             function onError(e) {
@@ -68,6 +88,19 @@ var BabylonViewer = {
             },
             '.gltf'
         );
+    },
+
+    _emptyScene: function() {
+        var model = BabylonViewer.scene.meshes.reduce(function(acc, cur){
+            if (cur.id === 'RootNode (gltf orientation matrix)') {
+                return cur;
+            }
+            return acc;
+        }, null);
+
+        if (model) {
+            model.dispose();
+        }
     },
 
     loop: function() {
