@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sketchfab Viewer API example</title>
+    <link rel="stylesheet" href="../styles/sketchfab.css" media="screen">
+
+    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.1.0.js"></script>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        .app {
+            height: calc(100% - 60px);
+        }
+
+        .viewer {
+            display: block;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        .viewer iframe {
+            display: block;
+            border: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .annotations {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .annotation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border: 4px solid black;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .description {
+            box-sizing: border-box;
+            position: absolute;
+            padding: 30px;
+            top: 30px;
+            right: 30px;
+            width: 240px;
+            background: rgba(0,0,0,0.6);
+            color: #ffffff;
+            border-radius: 3px;
+            z-index: 2;
+
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .description.--active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .description iframe,
+        .description img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1 class="header--logo">
+            <a href="../">
+                <img src="../assets/sketchfab-logo.svg" alt="Sketchfab" width="120" class="header--image">
+                <span>Labs Experiments</span>
+            </a>
+        </h1>
+    </header>
+    <div class="app">
+        <div class="viewer">
+            <iframe src="" width="640" height="400" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+            <div class="annotations"></div>
+            <div class="description"></div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="AnnotatedViewer.js"></script>
+<script type="text/javascript" src="app.js"></script>
+</html>
