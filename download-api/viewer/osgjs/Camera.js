@@ -1,5 +1,7 @@
 (function() {
-    var DEBUG_CAMERA_GEOMETRY = window.optionsURL.debug !== undefined ? window.optionsURL.debug : false;
+    var DEBUG_CAMERA_GEOMETRY =
+        window.optionsURL.debug !== undefined ? window.optionsURL.debug : false;
+
     var CAMERA_DURATION = 10.0;
 
     var osg = window.OSG.osg;
@@ -28,7 +30,7 @@
     };
     FindVisitor.prototype = osg.NodeVisitor.prototype;
 
-    var createCameraData = function(bbox) {
+    var createRandomCameraData = function(bbox) {
         var center = osg.vec3.create();
         bbox.center(center);
 
@@ -173,7 +175,7 @@
         w = osg.vec3.fromValues(0.0, bbox.yMin() - bbox.yMax(), 0.0);
         start = osg.vec3.fromValues(bbox.xMax(), bbox.yMax(), bbox.zMin());
         sampleFace(scene, u, v, w, start, samples, pointOfInterests);
-        console.log('founds 0 ', pointOfInterests.length);
+        //console.log('founds 0 ', pointOfInterests.length);
 
         // sample from x to -x
         u = osg.vec3.fromValues(0.0, bbox.yMax() - bbox.yMin(), 0.0);
@@ -181,7 +183,7 @@
         w = osg.vec3.fromValues(bbox.xMin() - bbox.xMax(), 0.0, 0.0);
         start = osg.vec3.fromValues(bbox.xMax(), bbox.yMin(), bbox.zMin());
         sampleFace(scene, u, v, w, start, samples, pointOfInterests);
-        console.log('founds 1 ', pointOfInterests.length);
+        // console.log('founds 1 ', pointOfInterests.length);
 
         // sample from z to -z
         u = osg.vec3.fromValues(bbox.xMax() - bbox.xMin(), 0.0, 0.0);
@@ -190,7 +192,7 @@
         start = osg.vec3.fromValues(bbox.xMin(), bbox.yMin(), bbox.zMax());
         sampleFace(scene, u, v, w, start, samples, pointOfInterests, true);
 
-        console.log('founds 2 ', pointOfInterests.length);
+        // console.log('founds 2 ', pointOfInterests.length);
         return pointOfInterests;
     };
 
@@ -222,12 +224,11 @@
 
     //https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array#2450976
     function shuffle(array) {
-        var currentIndex = array.length,
-            temporaryValue,
-            randomIndex;
+        var currentIndex = array.length, temporaryValue, randomIndex;
 
         // While there remain elements to shuffle...
         while (0 !== currentIndex) {
+
             // Pick a remaining element...
             randomIndex = Math.floor(Math.random() * currentIndex);
             currentIndex -= 1;
@@ -239,24 +240,27 @@
         }
 
         return array;
-    }
+    };
 
     var sortPointOfInterest = function(scene, interests) {
-        var bbox = getSceneBoundingBox();
-        var center = osg.vec3.create();
+        let bbox = getSceneBoundingBox();
+        let center = osg.vec3.create();
         bbox.center(center);
-        var filterArray = interests.filter(function(element) {
-            if (element._point[2] > center[2]) return true;
-            return false;
-        });
-        if (filterArray.length < 10) filterArray = interests;
+        // var filterArray = interests.filter(function(element) {
+        //     if (element._point[2] > center[2]) return true;
+        //     return false;
+        // });
+        // if (filterArray.length < 10) filterArray = interests;
 
-        var sortByBiggestAxis = function(a, b) {
+        let sortByHeight = function(a, b) {
             return b._point[2] - a._point[2];
         };
-        filterArray.sort(sortByBiggestAxis);
+        interests.sort(sortByHeight);
+        let filterArray = shuffle(interests);
 
-        filterArray = shuffle(filterArray);
+        // set max number of interest point
+        let MAX_POI = 64;
+        if (filterArray.length > MAX_POI) filterArray.length = MAX_POI;
 
         if (DEBUG_CAMERA_GEOMETRY) {
             var size = bbox.radius() * 0.01;
@@ -275,7 +279,7 @@
         // try to find nearest axis point of interests with a minimum distance
         var sceneSize = getSizeScene(scene);
         var size = sceneSize * 0.02; // 2%
-        var distLimit = sceneSize * TravelingMinDistanceRatio;
+        var distMin = sceneSize * TravelingMinDistanceRatio;
 
         var bbox = getSceneBoundingBox();
         var pp0 = osg.vec3.create();
@@ -287,7 +291,7 @@
             for (let i = j + 1; i < interests.length; i++) {
                 var candidate = interests[i];
                 var dist = osg.vec3.dist(source._point, candidate._point);
-                if (dist < distLimit) continue;
+                if (dist < distMin) continue;
 
                 // check normals in the same direction
                 var dot = osg.vec3.dot(source._normal, candidate._normal);
@@ -301,7 +305,7 @@
                 var normalSized = osg.vec3.scale(pp0, normal, sizeWithRatio);
                 osg.vec3.add(pp1, candidate._point, normalSized);
                 osg.vec3.add(pp0, source._point, normalSized);
-                if ( pp1[2] < bbox.zMin() || pp0[2] < bbox.zMin()) continue;
+                if (pp1[2] < bbox.zMin() || pp0[2] < bbox.zMin()) continue;
 
                 traveling.push({
                     p0: source._point,
@@ -310,60 +314,135 @@
                 });
             }
         }
+        console.log(traveling);
         console.log('found traveling ', traveling.length);
         return traveling;
     };
 
+    var SceneBoundingBox;
     var indexInterest = 0;
-    var createCameraDataWithScene3 = function(scene) {
-        if (DEBUG_CAMERA_GEOMETRY) debugReset();
+    var cameraDataAnimations = null;
+    var cameraDataIndex = 0;
+    var pointsOfInterests = null;
 
-        osg.time('generate point of interests');
-        var interests = SampleScene(scene);
+    var setCameraData = function(data) {
+        cameraDataAnimations = data;
+        cameraDataIndex = 0;
+    };
+    var getCameraData = function() {
+        return cameraDataAnimations;
+    };
 
-        // sort point of interests
-        interests = sortPointOfInterest(scene, interests);
+    var setInterests = function(poi) {
+        pointsOfInterests = poi;
+    };
+    var getInterests = function() {
+        return pointsOfInterests;
+    };
 
-        osg.timeEnd('generate point of interests');
-
-        var cameraData;
-        if (interests.length) {
-            indexInterest = (indexInterest + 1) % interests.length;
-            console.log('candidate result:', interests.length, ' selected ', indexInterest);
-            cameraData = computeEyeFromInteresectionAndNormal(scene, interests[indexInterest]);
-
-            // find potentioal traveling motion
-            // distance factor
-            var distanceFactor = 1.0 + (1.0 - indexInterest / interests.length);
-            console.log('distanceFactor ', distanceFactor);
-            var traveling = findTraveling(scene, interests);
-            for (let i = 0; i < traveling.length; i++) {
-                cameraData = generateTraveling(
-                    scene,
-                    traveling[i].p0,
-                    traveling[i].p1,
-                    traveling[i].normal,
-                    distanceFactor
-                );
-                console.log('generate traveling ', i);
-                if (cameraData) {
-                    console.log(cameraData);
-                    break;
-                }
-            }
-        }
-
-        if (false && !window.graph) {
-            var displayGraph = window.OSG.osgUtil.DisplayGraph.instance();
-            displayGraph.setDisplayGraphRenderer(true);
-            displayGraph.createGraph(scene);
-            window.graph = 1;
-        }
-
+    var getNextCameraData = function() {
+        console.log('return ', cameraDataIndex, ' cameraData');
+        let cameraData = getCameraData()[cameraDataIndex];
+        cameraDataIndex = (cameraDataIndex + 1) % getCameraData().length;
         return cameraData;
     };
 
-    var SceneBoundingBox;
+    let MAX_CAMERA_MOTION = 32;
+    let MAX_CAMERA_TRAVELING = Math.floor(MAX_CAMERA_MOTION * 3 / 5);
+    var randomArray = [];
+    for (let i = 0; i < MAX_CAMERA_MOTION; i++) {
+        if (i < MAX_CAMERA_TRAVELING) {
+            randomArray.push(1);
+        } else {
+            randomArray.push(0);
+        }
+    }
+    randomArray = shuffle(randomArray);
+
+    var createCameraDataFromScene = function(scene) {
+        setCameraData(null);
+        if (DEBUG_CAMERA_GEOMETRY) debugReset();
+
+        osg.time('generate point of interests');
+        var poi = SampleScene(scene);
+
+        // sort point of interests
+        poi = sortPointOfInterest(scene, poi);
+
+        setInterests(poi);
+
+        let cameraDataArray = [];
+
+        let travelingArray = poi.length ? findTraveling(scene, poi) : [];
+        console.log('number of poi', poi.length);
+        let lastTravelingIndex = 0;
+
+        let statsNbTraveling = 0;
+        let statsNbFocus = 0;
+        let statsNbRandom = 0;
+        for (let i = 0; i < MAX_CAMERA_MOTION; i++) {
+            // from 2 to 1
+            let distanceFactor = 1.0 + (1.0 - i / MAX_CAMERA_MOTION);
+
+            let generatedTraveling = false;
+            let generatedFocusPOI = false;
+
+            if (i < poi.length) {
+                let useTraveling = randomArray[i] > 0;
+
+                if (!travelingArray.length) useTraveling = false;
+
+                if (useTraveling) {
+                    for (let j = lastTravelingIndex; j < travelingArray.length; j++) {
+                        let cameraData = generateTraveling(
+                            scene,
+                            travelingArray[j].p0,
+                            travelingArray[j].p1,
+                            travelingArray[j].normal,
+                            distanceFactor
+                        );
+                        if (cameraData) {
+                            lastTravelingIndex = j + 1;
+                            cameraDataArray.push(cameraData);
+                            generatedTraveling = true;
+                            statsNbTraveling++;
+                            break;
+                        }
+                    }
+                    if (!generatedTraveling) {
+                        lastTravelingIndex = travelingArray.length;
+                    }
+                }
+                if (!generatedTraveling) {
+                    let cameraData = computeEyeFromInteresectionAndNormal(
+                        scene,
+                        poi[i],
+                        distanceFactor
+                    );
+                    if (cameraData) {
+                        cameraDataArray.push(cameraData);
+                        generatedFocusPOI = true;
+                        statsNbFocus++;
+                    }
+                }
+            }
+
+            if (!generatedTraveling && !generatedFocusPOI) {
+                cameraDataArray.push(createRandomCameraData(getSceneBoundingBox()));
+                statsNbRandom++;
+            }
+        }
+        console.log(
+            'generated camera motions, nbTraveling',
+            statsNbTraveling,
+            'nbFocus',
+            statsNbFocus,
+            'nbRandom',
+            statsNbRandom
+        );
+        setCameraData(cameraDataArray);
+        osg.timeEnd('generate point of interests');
+    };
 
     var getSceneBoundingBox = function() {
         return SceneBoundingBox;
@@ -377,17 +456,6 @@
         var dist = Math.min(vec[0], vec[1]);
         dist = Math.min(dist, vec[2]);
         return dist;
-    };
-
-    var getMaxAxisScene = function(scene) {
-        var bbox = getSceneBoundingBox();
-        var max = bbox.getMax();
-        var min = bbox.getMin();
-        var vec = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
-        var axis = 1;
-        if (vec[0] > vec[1]) axis = 0;
-        if (vec[axis] < vec[2]) axis = 2;
-        return axis;
     };
 
     var checkIntersection = function(scene, p0, p1) {
@@ -421,27 +489,34 @@
             return undefined;
         }
 
-        var minDistanceRatio = TravelingMinDistanceRatio;
-
         var speedRange = window.speedRange || {
-            min: 0.02,
-            max: 0.1
+            min: 0.6,
+            max: 0.8
         };
 
-        var min = speedRange.min * size;
-        var max = speedRange.max * size;
+        var min = (speedRange.min * size) / CAMERA_DURATION;
+        var max = (speedRange.max * size) / CAMERA_DURATION;
 
         var dist = osg.vec3.dist(startEye, stopEye);
         var speed = dist / CAMERA_DURATION;
 
         if (speed > max) {
-            console.log('too fast for travel motion ', speed, max);
-            return undefined;
+            // let's adjust destinationn if 10% more than max
+            let ratio = (speed - max) / max;
+            if (ratio < 0.2) {
+                console.log('adjust stop eye ', speed, max, ratio);
+                let newStopEye = osg.vec3.create();
+                stopEye = osg.vec3.lerp(newStopEye, startEye, stopEye, 1.0 - ratio);
+            } else {
+                console.log('too fast for travel motion ', speed, max, ratio);
+                return undefined;
+            }
         } else if (speed < min) {
             console.log('too slow for travel motion ', speed, min);
             return undefined;
         }
-        console.log('speed ', speed, min, max);
+
+        //console.log('speed ', speed, min, max);
 
         var data = {
             duration: CAMERA_DURATION,
@@ -457,7 +532,7 @@
         return data;
     };
 
-    var computeEyeFromInteresectionAndNormal = function(scene, intersection) {
+    var computeEyeFromInteresectionAndNormal = function(scene, intersection, distanceFactor) {
         var point = intersection._point;
         var normal = intersection._normal;
 
@@ -472,7 +547,7 @@
         var bbox = getSceneBoundingBox();
 
         // generate traveling a % of the radius of the scene
-        var size = getSizeScene(scene); //bbox.radius() * 0.2;
+        var size = getSizeScene(scene) * distanceFactor;
 
         var up = osg.vec3.fromValues(0, 0, 1);
         var xAxis = osg.vec3.create();
@@ -490,17 +565,15 @@
         // intersection is the point of intereset
         //                o     .
         //               /a\    |
-        //              /   \   | N
+        //              /   \   | N , size / 2
         //             /     \  v
         //            s<--d-->t
-        //
+        //              size
         // angle a is fixed so d too, we need to compute the length of N to respect
         // the fixed contraints
         //
         // tan a/2 * b / 2 = N
         // Math.tan(a/2) * (size / 2) = N
-        var alpha = Math.PI / 2.0;
-        var distance = 4 * size; // * 0.5 / Math.tan(alpha * 0.5);
 
         // startEye = point + N * distance - (xAxis * size * 0.5)
         // stopEye = point + N * distance + (xAxis * size * 0.5)
@@ -509,8 +582,8 @@
 
         var centerEye = osg.vec3.create();
         var xAxisSized = osg.vec3.create();
-        osg.vec3.scale(xAxisSized, xAxis, size * 0.5);
-        osg.vec3.scaleAndAdd(centerEye, point, normal, distance);
+        osg.vec3.scale(xAxisSized, xAxis, size / 2.0);
+        osg.vec3.scaleAndAdd(centerEye, point, normal, size / 2.0);
 
         osg.vec3.add(startEye, centerEye, xAxisSized);
         osg.vec3.sub(stopEye, centerEye, xAxisSized);
@@ -665,36 +738,6 @@
         }
     };
 
-    var createCameraDataWithScene = function(scene) {
-        var bbox = getSceneBoundingBox();
-        var center = osg.vec3.create();
-        bbox.center(center);
-
-        var size = bbox.radius();
-
-        var eyeStart = osg.vec3.create();
-        osg.vec3.random(eyeStart, size);
-        osg.vec3.add(eyeStart, eyeStart, center);
-
-        osg.time('send ray');
-
-        lineSegmentIntersector.reset();
-        intersectionVisitor.reset();
-        osg.NodeVisitor.prototype.reset.call(intersectionVisitor);
-
-        lineSegmentIntersector.set(eyeStart, center);
-        scene.accept(intersectionVisitor);
-        var intersections = lineSegmentIntersector.getIntersections();
-        osg.timeEnd('send ray');
-
-        if (intersections.length) {
-            for (var i = 0; i < intersections.length; i++) {
-                if (intersections[i]._backface) continue;
-                console.log(intersections[i]);
-            }
-        }
-    };
-
     var CameraPlayer = function(rootNode, camera, manipulator) {
         this._rootNode = rootNode;
         this._camera = camera;
@@ -739,14 +782,7 @@
         };
 
         this._computeNewPath = function() {
-            var bb = getSceneBoundingBox();
-            var cameraData = createCameraData(bb);
-            var cameraData2 = createCameraDataWithScene3(this._rootNode);
-            if (cameraData2) {
-                cameraData = cameraData2;
-            } else {
-                console.log('use random path');
-            }
+            return getNextCameraData();
 
             // if (!this._finder) {
             //     var finder = new FindVisitor();
@@ -786,9 +822,8 @@
             this._preciseBoundingBoxVisitor.setTraversalMask(1);
             this._rootNode.accept(this._preciseBoundingBoxVisitor);
             SceneBoundingBox = this._preciseBoundingBoxVisitor.getPreciseBoundingBox();
-            console.log('bounding box', this._preciseBoundingBoxVisitor.getPreciseBoundingBox());
+            createCameraDataFromScene(this._rootNode);
         };
-
     };
     CameraPlayer.STOP = 0;
     CameraPlayer.PLAYING = 1;
@@ -802,7 +837,6 @@
         debugGeometryReset();
         debugSphereReset();
     };
-
 
     window.CameraPlayer = CameraPlayer;
 })();
