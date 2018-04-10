@@ -1,34 +1,51 @@
+html,
 body {
-    background: #f2f2f2;
-    font-family: sans-serif;
     padding: 0;
     margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.app {
+    position: relative;
+    box-sizing: border-box;
+    height: calc(100% - 60px);
+    padding: 30px;
+}
+
+.panel {
+    box-sizing: border-box;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    border-radius: 3px;
+}
+
+.sidebar {
+    flex: 0 0 320px;
+    padding: 0 20px;
+    color: #555;
+    line-height: 1.5;
+}
+.sidebar .notes {
+    font-size: 13px;
+    color: #888;
+}
+
+.viewer {
+    position: relative;
+    flex: 1 1 auto;
+    background: #ccc;
 }
 
 #api-frame {
     display: block;
     position: absolute;
     left: 0;
-    top: 40px;
-    width: 100%;
-    height: calc(100% - 40px);
-    border: 0;
-}
-
-.about {
-    box-sizing: border-box;
-    height: 40px;
-    padding: 14px;
-}
-
-.share-button {
-    position: absolute;
     top: 0;
-    right: 0;
-    padding: 10px;
-}
-.fb_iframe_widget span {
-    vertical-align: baseline !important;
+    width: 100%;
+    height: 100%;
+    border: 0;
 }
 
 .options,
@@ -36,37 +53,51 @@ body {
     display: block;
     position: absolute;
     left: 50%;
-    bottom: 0;
+    bottom: 15px;
     transform: translate(-50%);
     z-index: 1;
+    margin: 0;
+    padding: 0;
 }
 .select {
     bottom: 20px;
 }
-    .options li {
-        display: inline-block;
-        margin: 0 10px;
-        width: 40px;
-        height: 40px;
-        border: 4px solid transparent;
-        border-radius: 50%;
-        text-indent: -1000px;
-        overflow: hidden;
-        cursor: pointer;
-    }
 
-    .options li.selected {
-        border: 4px solid white;
-    }
-    .options li.lightblue {
-        background: #70C0E7;
-    }
-    .options li.green {
-        background: #80B845;
-    }
-    .options li.red {
-        background: #C74334;
-    }
-    .options li.blue {
-        background: #2C4463;
-    }
+.options__option {
+    display: inline-block;
+    position: relative;
+}
+
+.options__option input {
+    opacity: 0;
+    position: absolute;
+}
+
+.options__option span {
+    display: inline-block;
+    margin: 0 10px;
+    width: 40px;
+    height: 40px;
+    border: 4px solid transparent;
+    border-radius: 50%;
+    text-indent: -1000px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #000;
+}
+
+.options__option input:checked + span {
+    border: 4px solid white;
+}
+.options__option span[class*='green'] {
+    background: #80b845;
+}
+.options__option span[class*='red'] {
+    background: #c74334;
+}
+.options__option span[class*='blue'] {
+    background: #2c4463;
+}
+.options__option span[class*='lightblue'] {
+    background: #70c0e7;
+}
