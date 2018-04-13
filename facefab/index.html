@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facefab</title>
+    <link rel="stylesheet" href="style/app.css">
+
+</head>
+
+<body>
+    <div class="app">
+
+        <div class="sidebar skfb-widget">
+        </div>
+        <div class="main">
+            <div class="viewer">
+                <canvas width="800" height="600" id='jeeFaceFilterCanvas'></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading">
+        Loading…
+        <span class="loading__progress"></span>
+    </div>
+    <div class="footer">
+        Computer vision by
+        <a href="https://jeeliz.com">
+            <img style="width:40px" src="vendors/LOGO_JEELIZ_BLUE.png">
+        </a>
+    </div>
+</body>
+<script src="vendors/zipjs/zip.js"></script>
+<script src="vendors/zipjs/zip-ext.js"></script>
+<script src="vendors/zipjs/HttpProgressReader.js"></script>
+<script src="https://apps.sketchfab.com/web-importer/sketchfab-importer.js"></script>
+
+<script src="viewer/threejs/three.min.js"></script>
+<script src="viewer/threejs/GLTFLoader.js"></script>
+<script src="viewer/threejs/RGBELoader.js"></script>
+<script src="viewer/threejs/PMREMGenerator.js"></script>
+<script src="viewer/threejs/PMREMCubeUVPacker.js"></script>
+<script src="viewer/threejs/HDRCubeTextureLoader.js"></script>
+<script src="viewer/threejs/OrbitControls.js"></script>
+<script src="viewer/threejs/Viewer.js"></script>
+
+<script src="vendors/jeelizFaceFilter.js"></script>
+
+<script>
+    zip.workerScriptsPath = 'vendors/zipjs/';
+</script>
+
+<script src="js/Downloader.js"></script>
+<script src="js/Search.js"></script>
+<script src="js/app.js"></script>
+
+</html>
