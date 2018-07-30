@@ -42,6 +42,7 @@ var AppView = Backbone.View.extend({
 
     events: {
         'click li[data-id]': 'toggle',
+        'click [name="load-model"]': 'loadModel',
         'change input[name="postprocessing"]': 'onPostProcessingChange'
     },
 
@@ -69,6 +70,18 @@ var AppView = Backbone.View.extend({
         );
 
         this.hidden = [];
+    },
+
+    loadModel: function() {
+        var picker = new SketchfabPicker();
+        picker.pick({
+            success: function(model) {
+                console.log(model);
+                var location = window.location;
+                var url = location.protocol + '//' +location.host + location.pathname + '?urlid=' + model.uid
+                window.location = url;
+            }.bind(this)
+        });
     },
 
     initViewer: function(callback) {
