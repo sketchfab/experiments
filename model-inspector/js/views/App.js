@@ -1,22 +1,43 @@
 'use strict';
 
-var $ = require('jquery');
-var _ = require('underscore');
-var Backbone = require('backbone');
-var config = require('../config.js');
-
-var tplInfo = require('../templates/info.tpl');
-var tplTextures = require('../templates/textures.tpl');
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
+var tplInfo = `
+<ul class="stat">
+    <li>
+        <span class="field">Vertices</span>
+        <span class="value"><%= info.vertexCount %></span>
+    </li>
+    <li>
+        <span class="field">Faces</span>
+        <span class="value"><%= info.faceCount %></span>
+    </li>
+    <li>
+        <span class="field">Renderer</span>
+        <span class="value"><%= info.options.shading.renderer %></span>
+    </li>
+    <li>
+        <span class="field">Materials</span>
+        <span class="value"><%= info.materialsCount %></span>
+    </li>
+</ul>
+`;
+var tplTextures = `
+<ul class="stat">
+    <li>
+        <span class="field">Textures</span>
+        <span class="value"><%= textures.count %></span>
+    </li>
+    <li>
+        <span class="field">Total Pixels</span>
+        <span class="value"><%= textures.pixelCount %></span>
+    </li>
+    <li>
+        <span class="field">VRAM</span>
+        <span class="value"><%= textures.vram %></span>
+    </li>
+</ul>
+`;
 
 var AppView = Backbone.View.extend({
-
     el: 'body',
 
     events: {
@@ -40,13 +61,14 @@ var AppView = Backbone.View.extend({
             return;
         }
 
-        this.initViewer(function(){
-            this.initOptions();
-            this.initPostProcessing();
-        }.bind(this));
+        this.initViewer(
+            function() {
+                this.initOptions();
+                this.initPostProcessing();
+            }.bind(this)
+        );
 
         this.hidden = [];
-
     },
 
     initViewer: function(callback) {
@@ -56,19 +78,22 @@ var AppView = Backbone.View.extend({
 
         var client = new Sketchfab(version, iframe);
 
-        client.init(this.urlid, _.extend(this._embedParams, {
-            success: function onSuccess(api) {
-                self._api = api;
-                api.start(function() {
-                    api.addEventListener('viewerready', function() {
-                        callback();
+        client.init(
+            this.urlid,
+            _.extend(this._embedParams, {
+                success: function onSuccess(api) {
+                    self._api = api;
+                    api.start(function() {
+                        api.addEventListener('viewerready', function() {
+                            callback();
+                        });
                     });
-                });
-            },
-            error: function onError() {
-                console.log('Error while initializing the viewer');
-            }
-        }));
+                },
+                error: function onError() {
+                    console.log('Error while initializing the viewer');
+                }
+            })
+        );
 
         this.getModelInfo();
         this.getTextures();
@@ -78,7 +103,13 @@ var AppView = Backbone.View.extend({
         e.stopPropagation();
         var $target = $(e.currentTarget);
 
-        console.log($target.attr('data-id'), $target.find('span').first().text());
+        console.log(
+            $target.attr('data-id'),
+            $target
+                .find('span')
+                .first()
+                .text()
+        );
 
         var id = parseInt($target.attr('data-id'), 10);
 
@@ -96,75 +127,60 @@ var AppView = Backbone.View.extend({
     },
 
     initOptions: function() {
-
-        this._api.getSceneGraph(function(err, result) {
-
-            if (err) {
-                console.log('Error getting nodes');
-                return;
-            }
-
-            console.log(result);
-
-            function renderChildren(node) {
-                var nodes = [];
-                for (var i = 0, l = node.children.length; i < l; i++) {
-                    nodes.push(renderNode(node.children[i]));
-                }
-                return '<ul>' + nodes.join('') + '</ul>';
-            }
-
-            function renderNode(node) {
-
-                var icons = {
-                    'Group': 'ion-folder',
-                    'Geometry': 'ion-document',
-                    'MatrixTransform': 'ion-arrow-expand'
+        this._api.getSceneGraph(
+            function(err, result) {
+                if (err) {
+                    console.log('Error getting nodes');
+                    return;
                 }
 
-                var out = '';
+                console.log(result);
 
-                out += '<li data-type="' + node.type + '" data-id="' + node.instanceID + '">';
-
-                out += '<i class="icon ' + icons[node.type] + '" title="' + node.type + '"></i> ';
-
-                out += '<span>' + (node.name ? node.name : ('(' + node.type + ')')) + '</span>';
-
-                if (node.children && node.children.length) {
-                    out += renderChildren(node);
+                function renderChildren(node) {
+                    var nodes = [];
+                    for (var i = 0, l = node.children.length; i < l; i++) {
+                        nodes.push(renderNode(node.children[i]));
+                    }
+                    return '<ul>' + nodes.join('') + '</ul>';
                 }
 
-                out += '</li>';
+                function renderNode(node) {
+                    var icons = {
+                        Group: 'ion-folder',
+                        Geometry: 'ion-document',
+                        MatrixTransform: 'ion-arrow-expand'
+                    };
 
-                return out;
-            }
+                    var out = '';
 
-            var out = '<ul>' + renderNode(result) + '</ul>';
-            $('.objects').html(out);
+                    out += '<li data-type="' + node.type + '" data-id="' + node.instanceID + '">';
 
-        }.bind(this));
+                    out +=
+                        '<i class="icon ' + icons[node.type] + '" title="' + node.type + '"></i> ';
+
+                    out += '<span>' + (node.name ? node.name : '(' + node.type + ')') + '</span>';
+
+                    if (node.children && node.children.length) {
+                        out += renderChildren(node);
+                    }
+
+                    out += '</li>';
+
+                    return out;
+                }
+
+                var out = '<ul>' + renderNode(result) + '</ul>';
+                $('.objects').html(out);
+            }.bind(this)
+        );
     },
 
     getTextures: function() {
-
         var template = _.template(tplTextures);
 
         $.ajax({
             url: 'https://sketchfab.com/i/models/' + this.urlid + '/textures',
             success: function(response) {
-
-                // Convert bits to human-readable unit
-                function humanSize(size) {
-                    var suffixes = ['b', 'KiB', 'MiB', 'GiB'];
-
-                    for (var i = 0; i < suffixes.length; i++, size /= 1024) {
-                        if (size < 1024) {
-                            return Math.floor(size) + ' ' + suffixes[i];
-                        }
-                    }
-                    return Math.floor(size) + ' ' + suffixes[suffixes.length - 1];
-                }
-
                 var textures = response.results;
                 for (var i = 0; i < textures.length; i++) {
                     for (var j = 0; j < textures[i].images.length; j++) {
@@ -182,7 +198,6 @@ var AppView = Backbone.View.extend({
                 var maxTextureSize;
                 var sumTextureSize = 0;
                 for (var i = 0; i < response.results.length; i++) {
-
                     texture = response.results[i];
 
                     maxTextureSize = 0;
@@ -197,37 +212,36 @@ var AppView = Backbone.View.extend({
                 textures.pixelCount = sumTextureSize;
                 textures.vram = humanSize(sumTextureSize * 4);
 
-
-                $('.textures').html(template({
-                    textures: textures
-                }));
+                $('.textures').html(
+                    template({
+                        textures: textures
+                    })
+                );
             }
         });
     },
 
     getModelInfo: function() {
-
         var template = _.template(tplInfo);
 
         $.ajax({
             url: 'https://sketchfab.com/i/models/' + this.urlid,
             success: function(response) {
-
                 var info = _.clone(response);
-                info.materialsCount = (_.keys(info.options.materials)).length;
-                $('.info').html(template({
-                    info: info
-                }));
+                info.materialsCount = _.keys(info.options.materials).length;
+                $('.info').html(
+                    template({
+                        info: info
+                    })
+                );
             }
         });
-
     },
 
     initPostProcessing: function() {
-
         var out = '<ul>';
 
-        this._api.getPostProcessing(function(settings){
+        this._api.getPostProcessing(function(settings) {
             // settings.enable
 
             if (settings.enable) {
@@ -240,20 +254,17 @@ var AppView = Backbone.View.extend({
                 settings.vignetteEnable ? '<li>Vignette</li>' : '',
                 settings.bloomEnable ? '<li>Bloom</li>' : '',
                 settings.toneMappingEnable ? '<li>Tone Mapping</li>' : '',
-                settings.colorBalanceEnable ? '<li>Color Balance</li>' : '',
+                settings.colorBalanceEnable ? '<li>Color Balance</li>' : ''
             ].join('');
             out += '</ul>';
 
             $('.postprocessing-settings').html(out);
-
         });
     },
 
     onPostProcessingChange: function(e) {
-        this._api.setPostProcessing( {
-            enable: $(e.target).is(':checked'),
-        } );
+        this._api.setPostProcessing({
+            enable: $(e.target).is(':checked')
+        });
     }
 });
-
-module.exports = AppView;
