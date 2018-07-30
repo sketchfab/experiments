@@ -43,6 +43,10 @@ body {
         border-bottom: 2px solid #444;
     }
 
+.inspector__load {
+    padding: 10px 0;
+}
+
 .objects {
     padding: 0 10px;
 }
