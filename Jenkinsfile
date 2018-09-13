@@ -55,8 +55,6 @@ if (env.BRANCH_NAME == 'master') {
                 color: "#EAEAEA"
             ]])
 
-            docker.login()
-
             machines.run(cmd: "./run.sh deploy_labs_experiments",
                 env: ENV,
                 fetch_creds: true,
