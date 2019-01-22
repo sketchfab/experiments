@@ -19,17 +19,18 @@ var vm = new Vue({
 
         onUrlSubmit: function( e ) {
             e.preventDefault();
-            var urlRegex = /https:\/\/sketchfab\.com\/models\/(\w+)/;
+            var urlRegex = /https:\/\/sketchfab\.com\/(3d-)?models\/([\w-]+)/;
             var matches = this.url.match( urlRegex );
             if ( matches ) {
-                getModel( matches[1] ).then( function( response) {
+                var uid = matches[2].split('-').slice(-1);
+                getModel( uid ).then( function( response ) {
                     pickModel( response.data );
                 } ).catch( function( error ){
                     console.error( error );
-                    alert( "Error: Can not load this URL");
+                    alert("Error: Cannot load this URL");
                 } );
             } else {
-                alert("This URL isn't a valid model URL. It should look like http://sketchfab.com/models/[UID]. Shortened URL are not supported.");
+                alert("This URL isn't a valid model URL. It should look like https://sketchfab.com/models/[UID] or https://sketchfab.com/3d-models/[model-name]-[UID]. Shortened URL are not supported.");
             }
         },
 
