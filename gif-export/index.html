@@ -26,7 +26,7 @@
                 <div class="progress"></div>
             </div>
             <div class="sidebar">
-
+ 
                 <div class="section active">
                     <button type="button" class="button btn-primary" id="load-scene">Load 3D scene</button>
                 </div>
@@ -39,8 +39,8 @@
                             Resolution
                         </label>
                         <div class="field-control">
-                            <input type="text" size="4" value="640" placeholder="width" name="width" title="Width. Max: 4096"> ×
-                            <input type="text" size="4" value="360" placeholder="height" name="height" title="Height. Max: 4096">
+                            <input type="text" size="4" value="1920" placeholder="width" name="width" title="Width. Max: 4096"> 
+                            <input type="text" size="4" value="1080" placeholder="height" name="height" title="Height. Max: 4096">
                             <small>(4096 max)</small>
                         </div>
                     </div>
@@ -49,10 +49,13 @@
 
                         </label>
                         <div class="field-control">
-                            <a href="#" class="resolution-preset" data-width="320" data-height="180">320×180</a>
-                            <a href="#" class="resolution-preset" data-width="640" data-height="360">640×360</a>
-                            <a href="#" class="resolution-preset" data-width="1280" data-height="720">HD 720</a>
-                            <a href="#" class="resolution-preset" data-width="1920" data-height="1080">HD 1080</a>
+                            <!--https://en.wikipedia.org/wiki/Graphics_display_resolution#Overview_by_vertical_resolution_and_aspect_ratio !-->
+                            <a href="#" class="resolution-preset" data-width="1920" data-height="1080">Full HD 1080</a>
+                            <a href="#" class="resolution-preset" data-width="3840" data-height="2160">UHD 4K</a>  
+                            <a href="#" class="resolution-preset" data-width="2560" data-height="1440">WQUHD 2K</a>  
+                            <a href="#" class="resolution-preset" data-width="1280" data-height="720">HD 720</a>  
+                            <a href="#" class="resolution-preset" data-width="640" data-height="360">640×360</a>     
+                            <a href="#" class="resolution-preset" data-width="320" data-height="180">320×180</a>                   
                         </div>
                     </div>
                     <div class="field field-duration">
@@ -61,6 +64,8 @@
                         </label>
                         <div class="field-control">
                             <select name="duration" id="select-duration">
+                                <option value="0.1">0.1s</option>
+                                <option value="0.5">0.5s</option>
                                 <option value="1">1s</option>
                                 <option value="2" selected="">2s</option>
                                 <option value="5">5s</option>
@@ -68,6 +73,7 @@
                                 <option value="15">15s</option>
                                 <option value="20">20s</option>
                                 <option value="30">30s</option>
+                                <option value="60">60s</option>
                             </select>
                         </div>
                     </div>
@@ -77,12 +83,20 @@
                         </label>
                         <div class="field-control">
                             <select name="output" id="field-output">
+                                <option value="mp4">MP4</option>
                                 <option value="gif">GIF</option>
-                                <option value="webm">WebM Video (Chrome only)</option>
+                                <option value="png">PNGs (zip)</option>
                             </select>
                         </div>
                     </div>
+                    <!--
+                    <button type="submit" class="button btn-primary" id="record-mouse">Record Mouse</button>                    
+                    <button type="submit" class="button btn-primary" id="stop-record-mouse">Stop Record Mouse</button>
+                    !-->
                     <button type="submit" class="button btn-primary" id="render-gif">Render</button>
+                    
+                    
+                    
                 </form>
 
             </div>
@@ -90,15 +104,27 @@
     </div>
 
     <script type="text/javascript" src="https://labs.sketchfab.com/experiments/model-picker/SketchfabPicker.js"></script>
-    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.0.1.js"></script>
+    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.5.0.js"></script>
+
 
     <script type="text/javascript" src="js/vendors/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="js/vendors/lodash.min.js"></script>
     <script type="text/javascript" src="js/vendors/backbone-min.js"></script>
+    
+
+    <!-- zip -->
     <script type="text/javascript" src="js/vendors/gif.js"></script>
-    <script type="text/javascript" src="js/vendors/whammy.js"></script>
+    <!-- png list-->
+    <script type="text/javascript" src="js/vendors/jszip.js"></script>
+    <!-- filesave-->
     <script type="text/javascript" src="js/vendors/FileSaver.min.js"></script>
 
+    <!-- event recorder-->
+    <script type="text/javascript" src="js/vendors/mus.js"></script>
+    <!-- video encoder -->
+    <script type="text/javascript" src="js/views/videoencoder.js"></script>
+
+    // the app
     <script type="text/javascript" src="js/ImageSequence.js"></script>
     <script type="text/javascript" src="js/views/App.js"></script>
     <script type="text/javascript" src="js/views/Progress.js"></script>

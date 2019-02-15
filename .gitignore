@@ -3,7 +3,7 @@
 .DS_Store
 *~
 .#*
-
+.history*
 # Node
 node_modules
 .jshintrc

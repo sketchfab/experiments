@@ -1,36 +1,42 @@
-var ProgressView = Backbone.View.extend( {
+var ProgressView = Backbone.View.extend({
     el: '.progress',
 
-    initialize: function () {
-        this.listenTo( this.model, 'change', this.render.bind( this ) );
+    initialize: function() {
+        this.listenTo(this.model, 'change', this.render.bind(this));
     },
 
-    render: function () {
-        if ( this.model.get( 'isVisible' ) ) {
-            this.$el.addClass( 'active' );
+    render: function() {
+        if (this.model.get('isVisible')) {
+            this.$el.addClass('active');
         } else {
-            this.$el.removeClass( 'active' );
+            this.$el.removeClass('active');
         }
-
-        var percentage = Math.floor( 100 * this.model.get( 'value' ) );
 
         var out = '';
-        if ( percentage < 100 ) {
-            out = [
-                '<div>',
-                '<span>' + percentage + '%</span>',
-                '<div class="progress-bar"><span style="width:' + percentage + '%"></span></div>',
-                '</div>'
-            ].join( '' );
+        if (this.model.get('noprogress')) {
+            out = ['<div>', '</div>'].join('');
         } else {
-            out = [
-                '<div>',
-                '<span>Encoding…</span>',
-                '<div class="progress-bar"><span style="width:100%"></span></div>',
-                '</div>'
-            ].join( '' );
-        }
+            var percentage = Math.floor(100 * this.model.get('value'));
 
-        this.$el.html( out );
+            var out = '';
+            if (percentage < 100) {
+                out = [
+                    '<div>',
+                    '<span>' + percentage + '%</span>',
+                    '<div class="progress-bar"><span style="width:' +
+                        percentage +
+                        '%"></span></div>',
+                    '</div>'
+                ].join('');
+            } else {
+                out = [
+                    '<div>',
+                    '<span>Encoding…</span>',
+                    '<div class="progress-bar"><span style="width:100%"></span></div>',
+                    '</div>'
+                ].join('');
+            }
+        }
+        this.$el.html(out);
     }
-} );
+});
