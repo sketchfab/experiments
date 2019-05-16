@@ -2327,39 +2327,39 @@ var WasmEncoder1c = function(WasmEncoder1c) {
     return WasmEncoder1c;
 };
 
-let Module = {};
+var Module = {};
 WasmEncoder1c(Module);
 
-let useAudio = false;
+var useAudio = false;
 
-const fileType = 1;
-Module['onRuntimeInitialized'] = () => {
+var fileType = 1;
+Module['onRuntimeInitialized'] = function() {
     postMessage({ action: 'loaded' });
 };
 
-openVideo = config => {
-    let { width, height, fps, bitrate, presetIdx } = config;
+var openVideo = function(config) {
+    var { width, height, fps, bitrate, presetIdx } = config;
     Module._open_video(width, height, fps, bitrate, presetIdx, fileType, fileType);
     //frameSize = width * height * 4;
 };
 
-let audioFramesRecv = 1,
+var audioFramesRecv = 1,
     left,
     encodeVideo,
     videoFramesEncoded = 0,
     audioFramesEncoded = 0;
-let aduioTimeSum = 0,
+var aduioTimeSum = 0,
     videoTimeSum = 0;
-let debug = false;
+var debug = false;
 
-addAudioFrame = buffer => {
-    const t = performance.now();
+var addAudioFrame = function(buffer) {
+    var t = performance.now();
     var left_p = Module._malloc(left.length * 4);
     Module.HEAPF32.set(left, left_p >> 2);
     var right_p = Module._malloc(buffer.length * 4);
     Module.HEAPF32.set(buffer, right_p >> 2);
     Module._add_audio_frame(left_p, right_p, left.length);
-    const delta = performance.now() - t;
+    var delta = performance.now() - t;
     aduioTimeSum += delta;
     if (audioFramesEncoded++ % 25 === 0 && debug)
         console.log(
@@ -2371,8 +2371,8 @@ addAudioFrame = buffer => {
     postMessage({ action: 'ready' });
 };
 
-openAudio = config => {
-    const { bitrate, samplerate } = config;
+var openAudio = function(config) {
+    var { bitrate, samplerate } = config;
     try {
         Module._open_audio(samplerate, 2, bitrate, 2);
     } catch (err) {
@@ -2380,19 +2380,19 @@ openAudio = config => {
     }
 };
 
-writeHeader = () => {
+var writeHeader = function() {
     Module._write_header();
 };
 
-close_stream = () => {
+var close_stream = function() {
     var video_p, size_p, size;
     video_p = Module._close_stream(size_p);
     size = Module.HEAP32[size_p >> 2];
     return new Uint8Array(Module.HEAPU8.subarray(video_p, video_p + size));
 };
 
-addVideoFrame = buffer => {
-    const t = performance.now();
+var addVideoFrame = function(buffer) {
+    var t = performance.now();
     try {
         var encodedBuffer_p = Module._malloc(buffer.length);
         Module.HEAPU8.set(buffer, encodedBuffer_p);
@@ -2402,7 +2402,7 @@ addVideoFrame = buffer => {
     }
     //hack to avoid memory leaks
     postMessage(buffer.buffer, [buffer.buffer]);
-    const delta = performance.now() - t;
+    var delta = performance.now() - t;
     videoTimeSum += delta;
     if (videoFramesEncoded++ % 25 === 0 && debug)
         console.log(
@@ -2414,14 +2414,14 @@ addVideoFrame = buffer => {
     postMessage({ action: 'ready' });
 };
 
-close = () => {
-    let vid = close_stream();
+var close = function() {
+    var vid = close_stream();
     Module._free_buffer();
     postMessage({ action: 'return', data: vid.buffer });
 };
 
-onmessage = e => {
-    const { data } = e;
+var onmessage = function(e) {
+    var { data } = e;
     if (data.action === undefined) {
         if (encodeVideo) {
             addVideoFrame(data);

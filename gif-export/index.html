@@ -23,10 +23,22 @@
         <div class="panel">
             <div class="viewer">
                 <iframe src="" id="api-frame" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
                 <div class="progress"></div>
+
+                <div id="recorder" tabindex="0" draggable="false" style="z-index:99999;        display: block;
+                                                                                width: 100%;
+                                                                                height: 100%;
+                                                                                border: 0px;
+                                                                                position: absolute;
+                                                                                left: 50%;
+                                                                                top: 50%;
+                                                                                transform: translate(-50%, -50%);">
+                </div>
+
             </div>
             <div class="sidebar">
- 
+
                 <div class="section active">
                     <button type="button" class="button btn-primary" id="load-scene">Load 3D scene</button>
                 </div>
@@ -39,7 +51,7 @@
                             Resolution
                         </label>
                         <div class="field-control">
-                            <input type="text" size="4" value="1920" placeholder="width" name="width" title="Width. Max: 4096"> 
+                            <input type="text" size="4" value="1920" placeholder="width" name="width" title="Width. Max: 4096">
                             <input type="text" size="4" value="1080" placeholder="height" name="height" title="Height. Max: 4096">
                             <small>(4096 max)</small>
                         </div>
@@ -51,11 +63,11 @@
                         <div class="field-control">
                             <!--https://en.wikipedia.org/wiki/Graphics_display_resolution#Overview_by_vertical_resolution_and_aspect_ratio !-->
                             <a href="#" class="resolution-preset" data-width="1920" data-height="1080">Full HD 1080</a>
-                            <a href="#" class="resolution-preset" data-width="3840" data-height="2160">UHD 4K</a>  
-                            <a href="#" class="resolution-preset" data-width="2560" data-height="1440">WQUHD 2K</a>  
-                            <a href="#" class="resolution-preset" data-width="1280" data-height="720">HD 720</a>  
-                            <a href="#" class="resolution-preset" data-width="640" data-height="360">640×360</a>     
-                            <a href="#" class="resolution-preset" data-width="320" data-height="180">320×180</a>                   
+                            <a href="#" class="resolution-preset" data-width="3840" data-height="2160">UHD 4K</a>
+                            <a href="#" class="resolution-preset" data-width="2560" data-height="1440">WQUHD 2K</a>
+                            <a href="#" class="resolution-preset" data-width="1280" data-height="720">HD 720</a>
+                            <a href="#" class="resolution-preset" data-width="640" data-height="360">640×360</a>
+                            <a href="#" class="resolution-preset" data-width="320" data-height="180">320×180</a>
                         </div>
                     </div>
                     <div class="field field-duration">
@@ -77,6 +89,28 @@
                             </select>
                         </div>
                     </div>
+                    <div class="field field-fps">
+                        <label class="field-label" for="select-fps">
+                            FPS
+                        </label>
+                        <div class="field-control">
+                            <select name="fps" id="select-fps">
+                                <option value="30">30</option>
+                                <option value="60" selected="">60</option>
+                            </select>
+                        </div>
+                        </div>
+                    <div class="field field-texture">
+                        <label class="field-label" for="select-texture">
+                            texture quality
+                        </label>
+                        <div class="field-control">
+                            <select name="texture" id="select-texture">
+                                <option value="sd">SD</option>
+                                <option value="hd" selected="">HD</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="field">
                         <label class="field-label" for="field-output">
                             Format
@@ -89,28 +123,36 @@
                             </select>
                         </div>
                     </div>
-                    <!--
-                    <button type="submit" class="button btn-primary" id="record-mouse">Record Mouse</button>                    
+<div style="padding: 5px">
+                    <button type="submit" class="button btn-primary" id="render-gif">Render (autospin or animation)</button>
+                    <br/>
+</div>
+<div  style="padding: 5px">
+                    <button type="submit" class="button btn-primary" id="record-mouse">Record Mouse</button>
+                    &nbsp;
                     <button type="submit" class="button btn-primary" id="stop-record-mouse">Stop Record Mouse</button>
-                    !-->
-                    <button type="submit" class="button btn-primary" id="render-gif">Render</button>
-                    
-                    
-                    
+                    <br/>
+<div style="padding: 5px">
+                    <button type="submit" class="button btn-primary" id="render-record">Render using recorded mouse events</button>
+</div>
+
+
                 </form>
 
+<div>Steps: push "record mouse", do your things (including use alt/ctrl/shift+mouse), then push "stop record mouse", then push "Render using recorded mouse events" (and let that tab alone!)</div>
+                <div>DO NOT SWITCH TAB during render, better make the browser tab in its own "browser window" with no other tabs, alone, ( just let that single tab window on the desktop during render ) </div>
             </div>
         </div>
     </div>
 
     <script type="text/javascript" src="https://labs.sketchfab.com/experiments/model-picker/SketchfabPicker.js"></script>
-    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.5.0.js"></script>
+    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.6.0.js"></script>
 
 
     <script type="text/javascript" src="js/vendors/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="js/vendors/lodash.min.js"></script>
     <script type="text/javascript" src="js/vendors/backbone-min.js"></script>
-    
+
 
     <!-- zip -->
     <script type="text/javascript" src="js/vendors/gif.js"></script>
@@ -120,11 +162,11 @@
     <script type="text/javascript" src="js/vendors/FileSaver.min.js"></script>
 
     <!-- event recorder-->
-    <script type="text/javascript" src="js/vendors/mus.js"></script>
+    <script type="text/javascript" src="js/recordPlayer.js"></script>
+    <script type="text/javascript" src="js/recorder.js"></script>
     <!-- video encoder -->
     <script type="text/javascript" src="js/views/videoencoder.js"></script>
 
-    // the app
     <script type="text/javascript" src="js/ImageSequence.js"></script>
     <script type="text/javascript" src="js/views/App.js"></script>
     <script type="text/javascript" src="js/views/Progress.js"></script>

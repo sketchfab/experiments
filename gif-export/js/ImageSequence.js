@@ -3,14 +3,20 @@
 
     var Animations;
 
-    function ImageSequence(api, options) {
+    function ImageSequence(api, options, recordedData) {
         this.api = api;
         this.images = [];
         this.events = {};
         this.progressValue = 0;
+        this.recordedData = recordedData;
 
         var fps = options.fps || 60;
         var duration = options.duration || 2;
+
+        if (this.recordedData) {
+            this.currentPosition = 0;
+            duration = recordedData[recordedData.length - 8] / 1000.0;
+        }
 
         this.options = {
             width: options.width || 1920,
@@ -49,6 +55,10 @@
     };
 
     ImageSequence.prototype.start = function start() {
+        if (this.recordedData) {
+            this.currentPosition = 0; // restart from 0
+        }
+
         console.log('Starting image sequence', this.options);
         this.capture(
             this.options.steps,
@@ -79,13 +89,26 @@
             }
 
             this.triggerProgress(frameIndex / nbFrames);
-            if (!isAnimated) {
+
+            if (this.recordedData) {
+                var currentTime = (this.options.duration / nbFrames) * frameIndex;
+                if (isAnimated) {
+                    api.seekTo(currentTime);
+                }
+                this.currentPosition = playFrame(
+                    this.api,
+                    this.recordedData,
+                    currentTime * 1000.0, // in ms
+                    this.currentPosition
+                );
+            } else if (!isAnimated) {
                 var newCamera = Animations.turntable(initialCamera, frameIndex, nbFrames);
                 api.setCameraLookAt(newCamera.position, newCamera.target, 0);
             } else {
                 var seekTime = (this.options.duration / nbFrames) * frameIndex;
                 api.seekTo(seekTime);
             }
+
             api.getScreenShot(
                 width,
                 height,

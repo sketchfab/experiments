@@ -6,13 +6,16 @@ var AppView = Backbone.View.extend({
     events: {
         'click #load-scene': 'onLoadSceneClick',
         'click #render-gif': 'onRenderClick',
+        'click #render-record': 'onRenderRecordClick',
         'click #record-mouse': 'onRecordMouse',
         'click #stop-record-mouse': 'onStopRecordMouse',
         'click .resolution-preset': 'onPresetClick'
     },
 
     initialize: function() {
-        var version = '1.5.0';
+        var version = '1.6.0';
+
+        this.recordTarget = document.getElementById('recorder');
         this.iframe = this.$el.find('#api-frame').get(0);
         this.client = new Sketchfab(version, this.iframe);
         this.FPS = 60;
@@ -58,14 +61,16 @@ var AppView = Backbone.View.extend({
     initViewer: function(urlid) {
         this.uid = urlid;
 
-        this.client.init(urlid, {
+        //'7w7pAfrCfjovwykkEeRFLGw5SXS'
+
+        var options = {
             overrideDevicePixelRatio: 1,
             camera: 0,
             graph_optimizer: 1,
             preload: 1,
-
             success: function onSuccess(api) {
                 this.api = api;
+                setRecordingTarget(this.recordTarget, this.api);
                 api.start();
                 api.addEventListener(
                     'viewerready',
@@ -82,7 +87,10 @@ var AppView = Backbone.View.extend({
             error: function onError() {
                 console.error('Viewer error');
             }
-        });
+        };
+        if (this.textureQuality === 'HD') options.pixel_budget = -1;
+
+        this.client.init(urlid, options);
 
         this.getModelInfo(urlid).then(
             function(response) {
@@ -108,7 +116,7 @@ var AppView = Backbone.View.extend({
     },
 
     render: function() {
-        if (this.animations.length > 0) {
+        if (this.animations && this.animations.length > 0) {
             this.disableDuration();
         } else {
             this.enableDuration();
@@ -137,21 +145,33 @@ var AppView = Backbone.View.extend({
 
     onRecordMouse: function(e) {
         e.preventDefault();
-        this._mus = new Mus(this.iframe);
+        startRecording(this.api);
         this._progressModel.set('noprogress', true);
-        this._mus.record();
     },
 
     onStopRecordMouse: function(e) {
         e.preventDefault();
+        endRecording(this.api, this);
         this._progressModel.set('noprogress', false);
-        if (this._mus) this._mus.stop();
+    },
+
+    onRenderRecordClick: function(e) {
+        e.preventDefault();
+
+        if (!this.recordedData) return; // msg : "please record first"
+
+        this.renderSequence(this.recordedData);
     },
 
     onRenderClick: function(e) {
         e.preventDefault();
+        this.renderSequence();
+    },
 
-        var isAnimated = this.animations.length > 0;
+    renderSequence(recordedData) {
+        disableTransmitToIframe();
+
+        var isAnimated = this.animations && this.animations.length > 0;
         var width = Math.floor(parseInt(this.$el.find('input[name="width"]').val()));
         var height = Math.floor(parseInt(this.$el.find('input[name="height"]').val()));
         var duration = isAnimated
@@ -159,12 +179,18 @@ var AppView = Backbone.View.extend({
             : parseFloat(this.$el.find('select[name="duration"]').val());
         var output = this.$el.find('select[name="output"]').val();
 
+        var fps = parseInt(this.$el.find('select[name="fps"]').val(), 10);
+        this.FPS = fps;
+        var textureQuality = this.$el.find('select[name="texture"]').val();
+        this.textureQuality = textureQuality;
+
         var options = {
             width: width,
             height: height,
             duration: duration,
             isAnimated: isAnimated,
-            fps: this.FPS
+            fps: this.FPS,
+            textureQuality: textureQuality
         };
 
         var sequence;
@@ -175,12 +201,14 @@ var AppView = Backbone.View.extend({
                     width: width,
                     height: height
                 });
+                enableTransmitToIframe();
             }.bind(this);
         } else if (output === 'png') {
             options.format = 'image/png';
-            options.fps = 60;
+            options.fps = this.FPS;
             options.asDataURI = true;
             options.callback = function(images) {
+                enableTransmitToIframe();
                 this.saveFiles(images, {
                     width: width,
                     height: height
@@ -188,22 +216,21 @@ var AppView = Backbone.View.extend({
             }.bind(this);
         } else if (output === 'mp4') {
             options.format = 'mp4';
-            options.fps = 60;
+            options.fps = this.FPS;
             options.asDataURI = true;
 
             const canvas = document.createElement('canvas');
             canvas.height = height;
             canvas.width = width;
             const ctx = canvas.getContext('2d');
-            //var pixels = new Uint8Array(width * height * 4);
             var image = new Image();
-            ctx.translate(width - 1, height - 1);
-            ctx.rotate(Math.PI);
+            // invert Y
+            ctx.scale(1.0, -1.0);
 
             options.frameCallback = function(err, b64image) {
                 image.src = b64image;
                 image.onload = function() {
-                    ctx.drawImage(image, 0, 0);
+                    ctx.drawImage(image, 0, height * -1.0, width, height);
                     let imageData = ctx.getImageData(0, 0, width, height);
                     this.videoEncoder.queueFrame({ type: 'video', pixels: imageData.data });
                 }.bind(this);
@@ -217,6 +244,7 @@ var AppView = Backbone.View.extend({
                             new Blob([vid], { type: 'video/mp4' }),
                             this.getFilename('.mp4')
                         );
+                        enableTransmitToIframe();
                     }.bind(this)
                 );
             }.bind(this);
@@ -233,12 +261,19 @@ var AppView = Backbone.View.extend({
                 null,
                 function() {
                     if (first) {
-                        sequence.start();
+                        sequence.start(recordedData);
                         first = false;
                     } else {
                         sequence._capture(sequence.frameIndex + 1, sequence.initialCamera);
                     }
                 }.bind(this)
+            );
+            // set start position
+            playFrame(
+                this.api,
+                recordedData,
+                0, // in ms
+                0
             );
         }
 
@@ -246,7 +281,7 @@ var AppView = Backbone.View.extend({
             this.api.setCurrentAnimationByUID(this.animations[0][0]);
         }
 
-        sequence = new ImageSequence(this.api, options);
+        sequence = new ImageSequence(this.api, options, recordedData);
         sequence.on(
             'progress',
             function onProgress(progress) {
@@ -254,16 +289,11 @@ var AppView = Backbone.View.extend({
             }.bind(this)
         );
 
-        if (this._mus) {
-            // Sets playback speed (optional, default NORMAL)
-            this._mus.setPlaybackSpeed(this._mus.speed.SLOW);
-
-            // Starts playing and enjoy
-            this._mus.play();
-        }
         this._progressModel.set('noprogress', false);
         this._progressModel.set('isVisible', true);
-        if (output !== 'mp4') sequence.start();
+        if (output !== 'mp4') {
+            sequence.start(recordedData);
+        }
     },
 
     encodeGif: function(images, options) {
