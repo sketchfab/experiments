@@ -1,0 +1,94 @@
+{
+    "extends": ["eslint:recommended"],
+    "plugins": ["prettier"],
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "root": true,
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": false,
+        "mocha": false
+    },
+    "globals": {
+        "beforeEach": false,
+        "describe": false,
+        "it": false,
+        "define": false,
+        "require": false,
+        "ok": false,
+        "module": false,
+        "expect": false,
+        "test": false,
+        "asyncTest": false,
+        "equal": false,
+        "notEqual": false,
+        "strictEqual": false,
+        "notStrictEqual": false,
+        "start": false,
+        "deepEqual": false,
+        "Uint8Array": false,
+        "Uint8ClampedArray": false,
+        "Uint16Array": false,
+        "Uint32Array": false,
+        "Float32Array": false,
+        "Float64Array": false,
+        "Int8Array": false,
+        "Int16Array": false,
+        "Int32Array": false,
+        "ArrayBuffer": false
+    },
+    "rules": {
+        "prettier/prettier": "error",
+        "no-debugger": "error",
+        "no-unsafe-negation": "error",
+        "brace-style": [
+            "error",
+            "1tbs",
+            {
+                "allowSingleLine": true
+            }
+        ],
+        "linebreak-style": ["error", "unix"],
+        "object-property-newline": [
+            "error",
+            {
+                "allowMultiplePropertiesPerLine": true
+            }
+        ],
+        "keyword-spacing": [
+            "error",
+            {
+                "before": true,
+                "after": true
+            }
+        ],
+        "no-bitwise": 0,
+        "eqeqeq": [
+            "error",
+            "always",
+            {
+                "null": "ignore"
+            }
+        ],
+        "no-use-before-define": [
+            2,
+            {
+                "functions": false
+            }
+        ],
+        "eol-last": 2,
+        "new-cap": 0,
+        "no-caller": 2,
+        "no-multi-str": 0,
+        "no-redeclare": ["error"],
+        "comma-style": [2, "last"],
+        "dot-notation": 0,
+        "no-empty": 0,
+        "no-useless-escape": 0,
+        "no-console": 0,
+        "no-constant-condition": 0
+    }
+}

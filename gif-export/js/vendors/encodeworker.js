@@ -2338,6 +2338,8 @@ Module['onRuntimeInitialized'] = function() {
 };
 
 var openVideo = function(config) {
+    // presetIdx
+    // presets[ "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow" ];
     var { width, height, fps, bitrate, presetIdx } = config;
     Module._open_video(width, height, fps, bitrate, presetIdx, fileType, fileType);
     //frameSize = width * height * 4;

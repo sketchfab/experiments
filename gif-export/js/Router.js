@@ -1,20 +1,22 @@
-'use strict';
+(function(window) {
+    'use strict';
+    
+    var Router = window['Backbone'].Router.extend({
+        routes: {
+            '': 'index',
+            'model/:urlid': 'screenshot'
+        },
 
-var Router = Backbone.Router.extend( {
-    routes: {
-        '': 'index',
-        'model/:urlid': 'screenshot'
-    },
+        initialize: function(options) {
+            this.appView = options.appView;
+        },
 
-    initialize: function ( options ) {
-        this.appView = options.appView;
-    },
+        index: function() {},
 
-    index: function () {
+        screenshot: function(urlid) {
+            this.appView.initViewer(urlid, false);
+        }
+    });
 
-    },
-
-    screenshot: function ( urlid ) {
-        this.appView.initViewer( urlid, false );
-    }
-} );
+    window['Router'] = Router;
+})(window);

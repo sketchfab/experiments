@@ -62,12 +62,10 @@
                         </label>
                         <div class="field-control">
                             <!--https://en.wikipedia.org/wiki/Graphics_display_resolution#Overview_by_vertical_resolution_and_aspect_ratio !-->
-                            <a href="#" class="resolution-preset" data-width="1920" data-height="1080">Full HD 1080</a>
                             <a href="#" class="resolution-preset" data-width="3840" data-height="2160">UHD 4K</a>
                             <a href="#" class="resolution-preset" data-width="2560" data-height="1440">WQUHD 2K</a>
-                            <a href="#" class="resolution-preset" data-width="1280" data-height="720">HD 720</a>
-                            <a href="#" class="resolution-preset" data-width="640" data-height="360">640×360</a>
-                            <a href="#" class="resolution-preset" data-width="320" data-height="180">320×180</a>
+                            <a href="#" class="resolution-preset" data-width="1920" data-height="1080">Full HD 1080</a>           
+                            <a href="#" class="resolution-preset" data-width="1280" data-height="720">HD 720</a>                 
                         </div>
                     </div>
                     <div class="field field-duration">
@@ -145,8 +143,14 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="https://labs.sketchfab.com/experiments/model-picker/SketchfabPicker.js"></script>
-    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.6.0.js"></script>
+    <script>
+            var eHead = document.getElementsByTagName('head')[0];
+            fileref = document.createElement('script')
+            fileref.setAttribute("type","text/javascript")
+            fileref.setAttribute("src", "../model-picker/SketchfabPicker.js");
+            eHead.insertBefore(fileref, eHead.firstChild);            
+    </script>
+   <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.6.0.js"></script>
 
 
     <script type="text/javascript" src="js/vendors/jquery-3.2.1.min.js"></script>

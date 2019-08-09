@@ -30,6 +30,19 @@
             frameCallback: options.frameCallback
         };
 
+        if (options.modelInfo) {
+            this.options.authorImg = new Image();
+            this.options.authorImg.crossOrigin = 'Anonymous';
+            this.options.authorImg.src =
+                options.modelInfo.user.avatar.images[
+                    options.modelInfo.user.avatar.images.length - 1
+                ].url;
+            this.options.name = options.modelInfo.name;
+            this.options.authorName = options.modelInfo.user.displayName;
+            // this.options.authorName = options.modelInfo.user.userName;
+        }
+        this.options.logoImg = options.logoImg;
+
         if (options.callback && isFunction(options.callback)) {
             this.clbk = options.callback;
         } else {
@@ -77,6 +90,28 @@
         var height = this.options.height;
         var isAnimated = this.options.isAnimated;
 
+        var image = new Image();
+
+        const canvas = document.createElement('canvas');
+        canvas.height = height;
+        canvas.width = width;
+        const ctx = canvas.getContext('2d');
+        // invert Y
+        ctx.scale(1.0, -1.0);
+
+        // scaled upon video size
+        // all sized/tested on full hd
+        var ratioH = height / 1080;
+        var ratioW = width / 1920;
+        var iconSize = 64 * ratioH;
+        var fontSize = 24 * ratioH;
+        var authorFont = fontSize + 'px serif';
+        var modelFont = 'bold ' + fontSize + ' serif';
+
+        // debug
+        var eBody = document.getElementsByTagName('body')[0];
+        eBody.insertBefore(canvas, eBody.firstChild);
+
         this._capture = function(frameIndex, initialCamera) {
             this.frameIndex = frameIndex;
             this.initialCamera = initialCamera;
@@ -113,23 +148,71 @@
                 width,
                 height,
                 outputFormat,
-                this.options.frameCallback
-                    ? this.options.frameCallback
-                    : function(err, b64image) {
-                          if (err) {
-                              return;
-                          }
+                function(err, b64image) {
+                    if (err) {
+                        return;
+                    }
 
-                          if (this.options.format !== 'image/webp' && !this.options.asDataURI) {
-                              var image = new Image();
-                              image.src = b64image;
-                              this.images.push(image);
-                          } else {
-                              this.images.push(b64image);
-                          }
+                    image.src = b64image;
+                    image.onload = function() {
+                        // only if alpha?
+                        ctx.clearRect(0, 0, width, height);
 
-                          this._capture(frameIndex + 1, initialCamera);
-                      }.bind(this)
+                        // rendered scene image
+                        ctx.drawImage(image, 0, height * -1.0, width, height);
+
+                        // author avatar
+                        ctx.drawImage(
+                            this.options.authorImg,
+                            5,
+                            height * -1.0 + 5,
+                            iconSize,
+                            iconSize
+                        );
+
+                        ctx.fillStyle = 'white';
+
+                        // model Name
+                        var wText = iconSize * 2.0 * ratioW;
+
+                        ctx.font = modelFont;
+                        ctx.fillText(this.options.name, wText, height * -1.0 + fontSize);
+
+                        // author name
+                        ctx.font = authorFont;
+                        ctx.fillText(
+                            this.options.authorName,
+                            wText,
+                            height * -1.0 + fontSize * 2.5
+                        );
+
+                        // logo
+                        ctx.drawImage(
+                            this.options.logoImg,
+                            width - 5 * ratioW - iconSize,
+                            height * -1.0 + height - 5 * ratioH - iconSize,
+                            iconSize,
+                            iconSize
+                        );
+
+                        let imageData = ctx.getImageData(0, 0, width, height);
+
+                        if (this.options.frameCallback) {
+                            this.options.frameCallback(imageData.data);
+                            return;
+                        }
+
+                        if (this.options.format !== 'image/webp' && !this.options.asDataURI) {
+                            var imageHTML = new Image();
+                            imageHTML.src = b64image;
+                            this.images.push(imageHTML);
+                        } else {
+                            this.images.push(b64image);
+                        }
+
+                        this._capture(frameIndex + 1, initialCamera);
+                    }.bind(this);
+                }.bind(this)
             );
         }.bind(this);
 
@@ -146,7 +229,7 @@
     };
 
     Animations = {
-        still: function still(camera, i, total) {
+        still: function still(camera /*, i, total*/) {
             return camera;
         },
 

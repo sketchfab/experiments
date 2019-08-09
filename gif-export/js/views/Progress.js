@@ -1,42 +1,47 @@
-var ProgressView = Backbone.View.extend({
-    el: '.progress',
+(function(window) {
+    'use strict';
 
-    initialize: function() {
-        this.listenTo(this.model, 'change', this.render.bind(this));
-    },
+    var ProgressView = Backbone.View.extend({
+        el: '.progress',
 
-    render: function() {
-        if (this.model.get('isVisible')) {
-            this.$el.addClass('active');
-        } else {
-            this.$el.removeClass('active');
-        }
+        initialize: function() {
+            this.listenTo(this.model, 'change', this.render.bind(this));
+        },
 
-        var out = '';
-        if (this.model.get('noprogress')) {
-            out = ['<div>', '</div>'].join('');
-        } else {
-            var percentage = Math.floor(100 * this.model.get('value'));
+        render: function() {
+            if (this.model.get('isVisible')) {
+                this.$el.addClass('active');
+            } else {
+                this.$el.removeClass('active');
+            }
 
             var out = '';
-            if (percentage < 100) {
-                out = [
-                    '<div>',
-                    '<span>' + percentage + '%</span>',
-                    '<div class="progress-bar"><span style="width:' +
-                        percentage +
-                        '%"></span></div>',
-                    '</div>'
-                ].join('');
+            if (this.model.get('noprogress')) {
+                out = ['<div>', '</div>'].join('');
             } else {
-                out = [
-                    '<div>',
-                    '<span>Encoding…</span>',
-                    '<div class="progress-bar"><span style="width:100%"></span></div>',
-                    '</div>'
-                ].join('');
+                var percentage = Math.floor(100 * this.model.get('value'));
+
+                if (percentage < 100) {
+                    out = [
+                        '<div>',
+                        '<span>' + percentage + '%</span>',
+                        '<div class="progress-bar"><span style="width:' +
+                            percentage +
+                            '%"></span></div>',
+                        '</div>'
+                    ].join('');
+                } else {
+                    out = [
+                        '<div>',
+                        '<span>Encoding…</span>',
+                        '<div class="progress-bar"><span style="width:100%"></span></div>',
+                        '</div>'
+                    ].join('');
+                }
             }
+            this.$el.html(out);
         }
-        this.$el.html(out);
-    }
-});
+    });
+
+    window['ProgressView'] = ProgressView;
+})(window);
