@@ -1,5 +1,7 @@
 # Sketchfab Experiments
 
+THIS REPOSITORY IS DEPRECATED. Go to https://github.com/sketchfab/sketchfab
+
 This repository contains some mad science!
 
 * [annotations-sync](./annotations-sync): display additional content in sync with annotation
