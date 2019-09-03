@@ -1,6 +1,8 @@
-# Sketchfab Experiments
+# THIS REPOSITORY IS DEPRECATED
 
-THIS REPOSITORY IS DEPRECATED. Go to https://github.com/sketchfab/sketchfab
+Go to https://github.com/sketchfab/sketchfab
+
+## Sketchfab Experiments
 
 This repository contains some mad science!
 
