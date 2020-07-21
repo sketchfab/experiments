@@ -1,6 +1,5 @@
 # THIS REPOSITORY IS DEPRECATED
 
-Go to https://github.com/sketchfab/sketchfab
 
 ## Sketchfab Experiments
 
